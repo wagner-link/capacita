@@ -286,7 +286,7 @@ class HeaderController {
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(46, 61, 40, 0.95);
+            background: rgba(2, 34, 82, 0.95);
             color: white;
             padding: 0.8rem 1.5rem;
             border-radius: 25px;
