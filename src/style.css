@@ -1040,24 +1040,24 @@ footer::before {
 
      /* Main Navigation */
      .main-nav {
-          position: fixed;
-          top: 100%;
-          left: 0;
-          width: 100%;
-          background: var(--dark-blue-text);
-          transform: translateY(-100%);
-          opacity: 0;
-          visibility: hidden;
-          transition: all 0.3s ease;
-          z-index: 99;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-          padding-bottom: 1rem;
-     }
-     .main-nav.active {
-          transform: translateY(0);
+            position: fixed;
+            top: 60px; /* Altura do header no mobile */
+            left: 0;
+            width: 100%;
+            background: var(--dark-blue-text);
+            transform: translateY(-150%); /* Inicia totalmente fora da tela */
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.4s ease, opacity 0.4s ease, visibility 0.4s;
+            z-index: 99;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding-bottom: 1rem;
+    }
+    .main-nav.active {
+          transform: translateY(0); /* Desliza para a posição correta */
           opacity: 1;
           visibility: visible;
-     }
+    }
      .main-nav ul {
           flex-direction: column;
           gap: 0;
