@@ -506,9 +506,6 @@
         document.getElementById('mobileLoginBtn').addEventListener('click', function() {
             const userData = localStorage.getItem('capacitaTgUser');
             if (userData) {
-                // Se estiver logado, você pode optar por mostrar o modal de perfil
-                // ou redirecionar para uma página de dashboard. Por enquanto, vamos manter
-                // a consistência e redirecionar para a página de cadastro/login.
                 window.location.href = 'entrar.html';
             } else {
                 // Se não estiver logado, redirecionar para entrar.html
