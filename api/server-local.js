@@ -1,34 +1,99 @@
 const express = require('express');
 const cors = require('cors');
-const { kv } = require('@vercel/kv'); // Importa o cliente do Vercel KV
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
+const PORT = 3300;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// Arquivos locais para armazenamento
+const COURSES_FILE = path.join(__dirname, 'courses.json');
+const STUDENTS_FILE = path.join(__dirname, 'students.json');
+const COMPANIES_FILE = path.join(__dirname, 'companies.json');
 
-// Função para ler os cursos do Vercel KV
+// Função para ler os cursos do arquivo JSON local
 async function readCourses() {
   try {
-    // Busca os dados da chave 'courses'. Se não existir, retorna um array vazio.
-    const courses = await kv.get('courses');
-    return courses || [];
+    if (!fs.existsSync(COURSES_FILE)) {
+      return [];
+    }
+    const data = fs.readFileSync(COURSES_FILE, 'utf8');
+    const jsonData = JSON.parse(data);
+    return jsonData.courses || [];
   } catch (error) {
-    console.error('Error reading courses from Vercel KV:', error);
+    console.error('Error reading courses from JSON file:', error);
     return [];
   }
 }
 
-// Função para escrever os cursos no Vercel KV
+// Função para escrever os cursos no arquivo JSON local
 async function writeCourses(coursesData) {
   try {
-    // Salva o array completo de cursos na chave 'courses'
-    await kv.set('courses', coursesData);
+    const dataToWrite = JSON.stringify({ courses: coursesData }, null, 2);
+    fs.writeFileSync(COURSES_FILE, dataToWrite, 'utf8');
     return true;
   } catch (error) {
-    console.error('Error writing courses to Vercel KV:', error);
+    console.error('Error writing courses to JSON file:', error);
+    return false;
+  }
+}
+
+// Função para ler os alunos/atiradores do arquivo JSON local
+async function readStudents() {
+  try {
+    if (!fs.existsSync(STUDENTS_FILE)) {
+      fs.writeFileSync(STUDENTS_FILE, JSON.stringify({ students: [] }, null, 2));
+      return [];
+    }
+    const data = fs.readFileSync(STUDENTS_FILE, 'utf8');
+    const jsonData = JSON.parse(data);
+    return jsonData.students || [];
+  } catch (error) {
+    console.error('Error reading students from JSON file:', error);
+    return [];
+  }
+}
+
+// Função para escrever os alunos/atiradores no arquivo JSON local
+async function writeStudents(studentsData) {
+  try {
+    const dataToWrite = JSON.stringify({ students: studentsData }, null, 2);
+    fs.writeFileSync(STUDENTS_FILE, dataToWrite, 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error writing students to JSON file:', error);
+    return false;
+  }
+}
+
+// Função para ler as empresas do arquivo JSON local
+async function readCompanies() {
+  try {
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      fs.writeFileSync(COMPANIES_FILE, JSON.stringify({ companies: [] }, null, 2));
+      return [];
+    }
+    const data = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    const jsonData = JSON.parse(data);
+    return jsonData.companies || [];
+  } catch (error) {
+    console.error('Error reading companies from JSON file:', error);
+    return [];
+  }
+}
+
+// Função para escrever as empresas no arquivo JSON local
+async function writeCompanies(companiesData) {
+  try {
+    const dataToWrite = JSON.stringify({ companies: companiesData }, null, 2);
+    fs.writeFileSync(COMPANIES_FILE, dataToWrite, 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error writing companies to JSON file:', error);
     return false;
   }
 }
@@ -38,14 +103,13 @@ function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
 
-
 // GET /api/courses - Pega todos os cursos
 app.get('/api/courses', async (req, res) => {
   try {
     const courses = await readCourses();
     res.json(courses);
   } catch (error) {
-  {console.error('Error fetching courses:', error);}
+    console.error('Error fetching courses:', error);
     res.status(500).json({ error: 'Failed to fetch courses' });
   }
 });
@@ -57,11 +121,11 @@ app.get('/api/courses/:page', async (req, res) => {
     const allCourses = await readCourses();
     const filteredCourses = allCourses.filter(course => course.page === page);
     res.json(filteredCourses);
-  } catch (error)
-  {  console.error('Error fetching courses by page:', error);}
+  } catch (error) {
+    console.error('Error fetching courses by page:', error);
     res.status(500).json({ error: 'Failed to fetch courses' });
   }
-);
+});
 
 // POST /api/courses - Adiciona um novo curso
 app.post('/api/courses', async (req, res) => {
@@ -154,50 +218,6 @@ app.delete('/api/courses/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete course' });
   }
 });
-
-// Função para ler os alunos/atiradores do Vercel KV
-async function readStudents() {
-  try {
-    const students = await kv.get('students');
-    return students || [];
-  } catch (error) {
-    console.error('Error reading students from Vercel KV:', error);
-    return [];
-  }
-}
-
-// Função para escrever os alunos/atiradores no Vercel KV
-async function writeStudents(studentsData) {
-  try {
-    await kv.set('students', studentsData);
-    return true;
-  } catch (error) {
-    console.error('Error writing students to Vercel KV:', error);
-    return false;
-  }
-}
-
-// Função para ler as empresas do Vercel KV
-async function readCompanies() {
-  try {
-    const companies = await kv.get('companies');
-    return companies || [];
-  } catch (error) {
-    console.error('Error reading companies from Vercel KV:', error);
-    return [];
-  }
-}
-
-// Função para escrever as empresas no Vercel KV
-async function writeCompanies(companiesData) {
-  try {
-    await kv.set('companies', companiesData);
-    return true;
-  } catch (error) {
-    console.error('Error writing companies to Vercel KV:', error);
-    return false;
-  }
-}
 
 // GET /api/students - Pega todos os alunos/atiradores
 app.get('/api/students', async (req, res) => {
@@ -317,5 +337,14 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Exporta o app para a Vercel
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor da API rodando em http://localhost:${PORT}`);
+  console.log(`📋 Endpoints disponíveis:`);
+  console.log(`   - GET /api/health`);
+  console.log(`   - GET/POST /api/courses`);
+  console.log(`   - GET/POST /api/students`);
+  console.log(`   - GET/POST /api/companies`);
+});
+
 module.exports = app;

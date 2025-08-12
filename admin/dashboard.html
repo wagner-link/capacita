@@ -25,17 +25,39 @@
         </div>
     </header>
 
+    <!-- Navigation -->
+    <nav class="admin-nav">
+        <div class="admin-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-section="courses">
+                    <span class="nav-icon">📚</span>
+                    Cursos
+                </button>
+                <button class="nav-tab" data-section="students">
+                    <span class="nav-icon">🎓</span>
+                    Alunos
+                </button>
+                <button class="nav-tab" data-section="companies">
+                    <span class="nav-icon">🏢</span>
+                    Empresas
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="admin-main">
         <div class="admin-container">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <h2>Gerenciamento de Cursos</h2>
-                <button class="btn btn-primary" id="addCourseBtn">
-                    <span class="btn-icon">+</span>
-                    Adicionar Novo Curso
-                </button>
-            </div>
+            <!-- Courses Section -->
+            <div class="content-section active" id="coursesSection">
+                <!-- Dashboard Header -->
+                <div class="dashboard-header">
+                    <h2>Gerenciamento de Cursos</h2>
+                    <button class="btn btn-primary" id="addCourseBtn">
+                        <span class="btn-icon">+</span>
+                        Adicionar Novo Curso
+                    </button>
+                </div>
 
             <!-- Stats Cards -->
             <div class="stats-grid">
@@ -126,6 +148,146 @@
                     <div class="empty-icon">📚</div>
                     <h3>Nenhum curso encontrado</h3>
                     <p>Adicione seu primeiro curso para começar.</p>
+                </div>
+            </div>
+            </div>
+
+            <!-- Students Section -->
+            <div class="content-section" id="studentsSection">
+                <div class="dashboard-header">
+                    <h2>Gerenciamento de Alunos</h2>
+                </div>
+
+                <!-- Students Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎓</div>
+                        <div class="stat-content">
+                            <h3 id="totalStudents">0</h3>
+                            <p>Total de Alunos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📧</div>
+                        <div class="stat-content">
+                            <h3 id="studentsThisMonth">0</h3>
+                            <p>Cadastros este mês</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Lista de Alunos</h3>
+                        <div class="table-filters">
+                            <select id="studentCityFilter" class="filter-select">
+                                <option value="">Todas as cidades</option>
+                                <option value="Arapiraca">Arapiraca</option>
+                                <option value="Penedo">Penedo</option>
+                                <option value="São José da Laje">São José da Laje</option>
+                                <option value="Palmeira dos Índios">Palmeira dos Índios</option>
+                                <option value="Teotônio Vilela">Teotônio Vilela</option>
+                                <option value="Maceió">Maceió</option>
+                            </select>
+                            <input type="text" id="studentSearchInput" placeholder="Buscar alunos..." class="search-input">
+                        </div>
+                    </div>
+
+                    <table class="admin-table" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>👤 Aluno</th>
+                                <th>🏙️ Cidade</th>
+                                <th>📱 Telefone</th>
+                                <th>📅 Cadastro</th>
+                                <th>⚡ Status</th>
+                                <th>🔧 Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                        </tbody>
+                    </table>
+
+                    <div class="loading-state" id="studentsLoadingState" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Carregando alunos...</p>
+                    </div>
+
+                    <div class="empty-state" id="studentsEmptyState" style="display: none;">
+                        <div class="empty-icon">🎓</div>
+                        <h3>Nenhum aluno encontrado</h3>
+                        <p>Os alunos cadastrados aparecerão aqui.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Companies Section -->
+            <div class="content-section" id="companiesSection">
+                <div class="dashboard-header">
+                    <h2>Gerenciamento de Empresas</h2>
+                </div>
+
+                <!-- Companies Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🏢</div>
+                        <div class="stat-content">
+                            <h3 id="totalCompanies">0</h3>
+                            <p>Total de Empresas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3 id="companiesThisMonth">0</h3>
+                            <p>Cadastros este mês</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Companies Table -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Lista de Empresas</h3>
+                        <div class="table-filters">
+                            <select id="companyCityFilter" class="filter-select">
+                                <option value="">Todas as cidades</option>
+                                <option value="Arapiraca">Arapiraca</option>
+                                <option value="Penedo">Penedo</option>
+                                <option value="São José da Laje">São José da Laje</option>
+                                <option value="Palmeira dos Índios">Palmeira dos Índios</option>
+                                <option value="Teotônio Vilela">Teotônio Vilela</option>
+                                <option value="Maceió">Maceió</option>
+                            </select>
+                            <input type="text" id="companySearchInput" placeholder="Buscar empresas..." class="search-input">
+                        </div>
+                    </div>
+
+                    <table class="admin-table" id="companiesTable">
+                        <thead>
+                            <tr>
+                                <th>🏢 Empresa</th>
+                                <th>🏙️ Cidade</th>
+                                <th>📅 Cadastro</th>
+                                <th>⚡ Status</th>
+                                <th>🔧 Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companiesTableBody">
+                        </tbody>
+                    </table>
+
+                    <div class="loading-state" id="companiesLoadingState" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Carregando empresas...</p>
+                    </div>
+
+                    <div class="empty-state" id="companiesEmptyState" style="display: none;">
+                        <div class="empty-icon">🏢</div>
+                        <h3>Nenhuma empresa encontrada</h3>
+                        <p>As empresas cadastradas aparecerão aqui.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -222,6 +384,42 @@
                         Excluindo...
                     </span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3>Detalhes do Aluno</h3>
+                <button class="modal-close" id="closeStudentModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="student-details" id="studentDetails">
+                    <!-- Student details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="closeStudentDetailsBtn">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Details Modal -->
+    <div class="modal-overlay" id="companyModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3>Detalhes da Empresa</h3>
+                <button class="modal-close" id="closeCompanyModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="company-details" id="companyDetails">
+                    <!-- Company details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="closeCompanyDetailsBtn">Fechar</button>
             </div>
         </div>
     </div>

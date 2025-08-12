@@ -5,6 +5,11 @@ class AdminDashboard {
         this.filteredCourses = [];
         this.currentCourse = null;
         this.isEditing = false;
+        this.students = [];
+        this.filteredStudents = [];
+        this.companies = [];
+        this.filteredCompanies = [];
+        this.currentSection = 'courses';
         
         this.init();
     }
@@ -18,6 +23,8 @@ class AdminDashboard {
 
         this.setupEventListeners();
         this.loadCourses();
+        this.loadStudents();
+        this.loadCompanies();
     }
 
     setupEventListeners() {
@@ -48,6 +55,28 @@ class AdminDashboard {
 
         // Image preview
         document.getElementById('courseImageUrl').addEventListener('input', this.updateImagePreview.bind(this));
+
+        // Navigation tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const section = e.currentTarget.dataset.section;
+                this.switchSection(section);
+            });
+        });
+
+        // Student filters
+        document.getElementById('studentCityFilter')?.addEventListener('change', this.applyStudentFilters.bind(this));
+        document.getElementById('studentSearchInput')?.addEventListener('input', this.applyStudentFilters.bind(this));
+
+        // Company filters
+        document.getElementById('companyCityFilter')?.addEventListener('change', this.applyCompanyFilters.bind(this));
+        document.getElementById('companySearchInput')?.addEventListener('input', this.applyCompanyFilters.bind(this));
+
+        // Modal close buttons for new modals
+        document.getElementById('closeStudentModal')?.addEventListener('click', () => this.hideModal('studentModal'));
+        document.getElementById('closeStudentDetailsBtn')?.addEventListener('click', () => this.hideModal('studentModal'));
+        document.getElementById('closeCompanyModal')?.addEventListener('click', () => this.hideModal('companyModal'));
+        document.getElementById('closeCompanyDetailsBtn')?.addEventListener('click', () => this.hideModal('companyModal'));
 
         // Close modals on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -477,6 +506,338 @@ class AdminDashboard {
             "'": '&#039;'
         };
         return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Navigation methods
+    switchSection(section) {
+        this.currentSection = section;
+        
+        // Update nav tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.section === section);
+        });
+        
+        // Update content sections
+        document.querySelectorAll('.content-section').forEach(content => {
+            content.classList.toggle('active', content.id === `${section}Section`);
+        });
+    }
+
+    // Students methods
+    async loadStudents() {
+        try {
+            this.showStudentsLoading(true);
+            const response = await fetch(`${this.apiUrl}/students`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            this.students = await response.json();
+            this.filteredStudents = [...this.students];
+            this.renderStudents();
+            this.updateStudentsStats();
+        } catch (error) {
+            console.error('Error loading students:', error);
+            this.showToast('Erro ao carregar alunos.', 'error');
+        } finally {
+            this.showStudentsLoading(false);
+        }
+    }
+
+    showStudentsLoading(show) {
+        const loadingState = document.getElementById('studentsLoadingState');
+        const table = document.getElementById('studentsTable');
+        
+        if (show) {
+            loadingState.style.display = 'block';
+            table.style.display = 'none';
+        } else {
+            loadingState.style.display = 'none';
+            table.style.display = 'table';
+        }
+    }
+
+    renderStudents() {
+        const tbody = document.getElementById('studentsTableBody');
+        const emptyState = document.getElementById('studentsEmptyState');
+        
+        if (this.filteredStudents.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            document.getElementById('studentsTable').style.display = 'none';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        document.getElementById('studentsTable').style.display = 'table';
+
+        tbody.innerHTML = this.filteredStudents.map(student => {
+            const registrationDate = new Date(student.dataRegistro);
+            const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 days
+            
+            return `
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-name">${this.escapeHtml(student.nome)}</div>
+                        <div class="user-email">${this.escapeHtml(student.email)}</div>
+                    </div>
+                </td>
+                <td>
+                    <span class="city-badge">${this.escapeHtml(student.cidade)}</span>
+                </td>
+                <td>
+                    <div class="phone-info">${this.escapeHtml(student.telefone || 'Não informado')}</div>
+                </td>
+                <td>
+                    <div class="date-info">
+                        ${registrationDate.toLocaleDateString('pt-BR')}
+                        <br>
+                        <small>${registrationDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge ${isRecent ? 'recent' : 'active'}">
+                        ${isRecent ? 'Novo' : 'Ativo'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-icon-only" onclick="adminDashboard.viewStudent('${student.id}')" title="Ver Detalhes">
+                            👁️
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+    updateStudentsStats() {
+        const total = this.students.length;
+        const thisMonth = this.students.filter(s => {
+            const registrationDate = new Date(s.dataRegistro);
+            const now = new Date();
+            return registrationDate.getMonth() === now.getMonth() && 
+                   registrationDate.getFullYear() === now.getFullYear();
+        }).length;
+
+        document.getElementById('totalStudents').textContent = total;
+        document.getElementById('studentsThisMonth').textContent = thisMonth;
+    }
+
+    applyStudentFilters() {
+        const cityFilter = document.getElementById('studentCityFilter').value;
+        const searchTerm = document.getElementById('studentSearchInput').value.toLowerCase();
+
+        this.filteredStudents = this.students.filter(student => {
+            const matchesCity = !cityFilter || student.cidade === cityFilter;
+            const matchesSearch = !searchTerm || 
+                student.nome.toLowerCase().includes(searchTerm) ||
+                student.email.toLowerCase().includes(searchTerm);
+
+            return matchesCity && matchesSearch;
+        });
+
+        this.renderStudents();
+    }
+
+    viewStudent(studentId) {
+        const student = this.students.find(s => s.id === studentId);
+        if (student) {
+            this.showStudentDetails(student);
+        }
+    }
+
+    showStudentDetails(student) {
+        const detailsContainer = document.getElementById('studentDetails');
+        detailsContainer.innerHTML = `
+            <div class="detail-row">
+                <div class="detail-label">Nome Completo</div>
+                <div class="detail-value">${this.escapeHtml(student.nome)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Cidade</div>
+                <div class="detail-value">${this.escapeHtml(student.cidade)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">${this.escapeHtml(student.email)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Telefone</div>
+                <div class="detail-value">${this.escapeHtml(student.telefone || 'Não informado')}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Habilidades</div>
+                <div class="detail-value multiline">${this.escapeHtml(student.habilidades || 'Não informado')}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Experiência</div>
+                <div class="detail-value multiline">${this.escapeHtml(student.experiencia || 'Não informado')}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Formação</div>
+                <div class="detail-value multiline">${this.escapeHtml(student.formacao || 'Não informado')}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Data de Registro</div>
+                <div class="detail-value">${new Date(student.dataRegistro).toLocaleString('pt-BR')}</div>
+            </div>
+        `;
+        this.showModal('studentModal');
+    }
+
+    // Companies methods
+    async loadCompanies() {
+        try {
+            this.showCompaniesLoading(true);
+            const response = await fetch(`${this.apiUrl}/companies`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            this.companies = await response.json();
+            this.filteredCompanies = [...this.companies];
+            this.renderCompanies();
+            this.updateCompaniesStats();
+        } catch (error) {
+            console.error('Error loading companies:', error);
+            this.showToast('Erro ao carregar empresas.', 'error');
+        } finally {
+            this.showCompaniesLoading(false);
+        }
+    }
+
+    showCompaniesLoading(show) {
+        const loadingState = document.getElementById('companiesLoadingState');
+        const table = document.getElementById('companiesTable');
+        
+        if (show) {
+            loadingState.style.display = 'block';
+            table.style.display = 'none';
+        } else {
+            loadingState.style.display = 'none';
+            table.style.display = 'table';
+        }
+    }
+
+    renderCompanies() {
+        const tbody = document.getElementById('companiesTableBody');
+        const emptyState = document.getElementById('companiesEmptyState');
+        
+        if (this.filteredCompanies.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            document.getElementById('companiesTable').style.display = 'none';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        document.getElementById('companiesTable').style.display = 'table';
+
+        tbody.innerHTML = this.filteredCompanies.map(company => {
+            const registrationDate = new Date(company.dataRegistro);
+            const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 days
+            
+            return `
+            <tr>
+                <td>
+                    <div class="company-info">
+                        <div class="company-name">${this.escapeHtml(company.nomeEmpresa)}</div>
+                        <div class="company-email">${this.escapeHtml(company.email)}</div>
+                    </div>
+                </td>
+                <td>
+                    <span class="city-badge">${this.escapeHtml(company.cidade)}</span>
+                </td>
+                <td>
+                    <div class="date-info">
+                        ${registrationDate.toLocaleDateString('pt-BR')}
+                        <br>
+                        <small>${registrationDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge ${isRecent ? 'recent' : 'active'}">
+                        ${isRecent ? 'Nova' : 'Ativa'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-icon-only" onclick="adminDashboard.viewCompany('${company.id}')" title="Ver Detalhes">
+                            👁️
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+    updateCompaniesStats() {
+        const total = this.companies.length;
+        const thisMonth = this.companies.filter(c => {
+            const registrationDate = new Date(c.dataRegistro);
+            const now = new Date();
+            return registrationDate.getMonth() === now.getMonth() && 
+                   registrationDate.getFullYear() === now.getFullYear();
+        }).length;
+
+        document.getElementById('totalCompanies').textContent = total;
+        document.getElementById('companiesThisMonth').textContent = thisMonth;
+    }
+
+    applyCompanyFilters() {
+        const cityFilter = document.getElementById('companyCityFilter').value;
+        const searchTerm = document.getElementById('companySearchInput').value.toLowerCase();
+
+        this.filteredCompanies = this.companies.filter(company => {
+            const matchesCity = !cityFilter || company.cidade === cityFilter;
+            const matchesSearch = !searchTerm || 
+                company.nomeEmpresa.toLowerCase().includes(searchTerm) ||
+                company.email.toLowerCase().includes(searchTerm);
+
+            return matchesCity && matchesSearch;
+        });
+
+        this.renderCompanies();
+    }
+
+    viewCompany(companyId) {
+        const company = this.companies.find(c => c.id === companyId);
+        if (company) {
+            this.showCompanyDetails(company);
+        }
+    }
+
+    showCompanyDetails(company) {
+        const detailsContainer = document.getElementById('companyDetails');
+        detailsContainer.innerHTML = `
+            <div class="detail-row">
+                <div class="detail-label">Nome da Empresa</div>
+                <div class="detail-value">${this.escapeHtml(company.nomeEmpresa)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Cidade</div>
+                <div class="detail-value">${this.escapeHtml(company.cidade)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">${this.escapeHtml(company.email)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Necessidades/Informações</div>
+                <div class="detail-value multiline">${this.escapeHtml(company.informacoes || 'Não informado')}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Data de Registro</div>
+                <div class="detail-value">${new Date(company.dataRegistro).toLocaleString('pt-BR')}</div>
+            </div>
+        `;
+        this.showModal('companyModal');
     }
 }
 
