@@ -240,8 +240,8 @@
     <div class="modal-overlay" id="userProfileModal">
         <div class="modal">
             <div class="modal-header">
-                <img src="/src/imgs/capacitatg.png" 
-                     alt="Logo Capacita TG">
+                <img src="/src/imgs/logo-arp.png" 
+                     alt="Logo da Prefeitura de Arapiraca">
                 <h3>Perfil do Usuário</h3>
                 <p>Suas informações de acesso</p>
             </div>
@@ -473,7 +473,7 @@
                 headerLoginBtn.innerHTML = `
                     <div class="user-info-header">
                         <span class="user-name-header">${user.nome.split(' ')[0]} ${user.nome.split(' ')[1] || ''}</span>
-                        <span class="user-type-header">${user.tipoUsuario === 'atirador' ? 'Atirador' : 'Empregador'}</span>
+                        <span class="user-type-header">${user.tipo === 'atirador' ? 'Aluno' : 'Empresa'}</span>
                     </div>
                 `;
                 headerLoginBtn.classList.add('logged-in');
@@ -484,9 +484,21 @@
                 headerLoginBtn.style.color = '';
             }
             
-            // Update mobile login button as well
-            if (window.headerController && window.headerController.updateMobileLoginButton) {
-                window.headerController.updateMobileLoginButton(user, isLoggedIn);
+            // Atualiza o botão de login para mobile também, se existir
+            const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+            if (mobileLoginBtn) {
+                if (isLoggedIn && user) {
+                    mobileLoginBtn.innerHTML = `
+                        <div class="user-info-header">
+                            <span class="user-name-header">${user.nome.split(' ')[0]} ${user.nome.split(' ')[1] || ''}</span>
+                            <span class="user-type-header">${user.tipo === 'atirador' ? 'Aluno' : 'Empresa'}</span>
+                        </div>
+                    `;
+                    mobileLoginBtn.classList.add('logged-in');
+                } else {
+                    mobileLoginBtn.textContent = 'Acessar';
+                    mobileLoginBtn.classList.remove('logged-in');
+                }
             }
         }
 
