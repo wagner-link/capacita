@@ -597,26 +597,17 @@ class AdminDashboard {
 
     // Navigation methods
     switchSection(section) {
-        this.currentSection = section;
-        
-        // Update nav tabs
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.classList.toggle('active', tab.dataset.section === section);
         });
-        
-        // Update content sections
         document.querySelectorAll('.content-section').forEach(content => {
             content.classList.toggle('active', content.id === `${section}Section`);
         });
-
-        document.querySelectorAll('.content-section').forEach(content => {
-            content.classList.toggle('active', content.id === `${section}Section`);
-        });
-    
         if (section === 'reorder') {
             this.renderReorderList();
         }
     }
+
 
     // Students methods
     async loadStudents() {
