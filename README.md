@@ -2,7 +2,7 @@
 
 ![Logo](src/imgs/capacitatg.png)
 
-O projeto **Capacita TG** é uma plataforma web dedicada a oferecer qualificação profissional para Atiradores matriculados nos Tiros de Guerra. O objetivo é facilitar a inserção desses jovens no mercado de trabalho por meio de cursos gratuitos e parcerias com empresas locais.
+O projeto **Capacita Arapiraca** é uma plataforma web dedicada a oferecer qualificação profissional para Atiradores matriculados nos Tiros de Guerra. O objetivo é facilitar a inserção desses jovens no mercado de trabalho por meio de cursos gratuitos e parcerias com empresas locais.
 
 ## 📋 Índice
 
