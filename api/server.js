@@ -203,19 +203,19 @@ async function writeCompanies(companiesData) {
 app.post('/api/students', async (req, res) => {
   try {
     const { nome, cidade, email, telefone, habilidades, experiencia, formacao, senha } = req.body;
-
+    
     if (!nome || !cidade || !email || !telefone || !habilidades || !senha) {
       return res.status(400).json({ error: 'Nome, cidade, email, telefone, habilidades e senha são obrigatórios' });
     }
-
+    
     const allStudents = await readStudents();
-
+    
     // Verificar se email já existe
     const existingStudent = allStudents.find(student => student.email === email);
     if (existingStudent) {
       return res.status(409).json({ error: 'Já existe um aluno cadastrado com este email' });
     }
-
+    
     const newStudent = {
       id: generateId(),
       nome,
@@ -229,14 +229,15 @@ app.post('/api/students', async (req, res) => {
       tipo: 'atirador',
       dataRegistro: new Date().toISOString()
     };
-
+    
     allStudents.push(newStudent);
-
-    const success = await writeStudents(allCourses);
+    
+    // CORREÇÃO: Passando 'allStudents' para a função de escrita
+    const success = await writeStudents(allStudents);
     if (!success) {
       return res.status(500).json({ error: 'Failed to save student' });
     }
-
+    
     res.status(201).json(newStudent);
   } catch (error) {
     console.error('Error creating student:', error);
@@ -248,19 +249,19 @@ app.post('/api/students', async (req, res) => {
 app.post('/api/companies', async (req, res) => {
   try {
     const { nomeEmpresa, cidade, email, informacoes, senha } = req.body;
-
+    
     if (!nomeEmpresa || !cidade || !email || !senha) {
       return res.status(400).json({ error: 'Nome da empresa, cidade, email e senha são obrigatórios' });
     }
-
+    
     const allCompanies = await readCompanies();
-
+    
     // Verificar se email já existe
     const existingCompany = allCompanies.find(company => company.email === email);
     if (existingCompany) {
       return res.status(409).json({ error: 'Já existe uma empresa cadastrada com este email' });
     }
-
+    
     const newCompany = {
       id: generateId(),
       nomeEmpresa,
@@ -271,14 +272,15 @@ app.post('/api/companies', async (req, res) => {
       tipo: 'empresa',
       dataRegistro: new Date().toISOString()
     };
-
+    
     allCompanies.push(newCompany);
-
+    
+    // CORREÇÃO: Passando 'allCompanies' para a função de escrita
     const success = await writeCompanies(allCompanies);
     if (!success) {
       return res.status(500).json({ error: 'Failed to save company' });
     }
-
+    
     res.status(201).json(newCompany);
   } catch (error) {
     console.error('Error creating company:', error);
