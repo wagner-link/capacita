@@ -556,7 +556,7 @@
     <div class="modal-overlay" id="successModal">
         <div class="modal">
             <div class="modal-header">
-                <img src="/src/imgs/capacitatg.png" 
+                <img src="/src/imgs/logo-arp.png" 
                      alt="Logo Capacita TG">
                 <h3 id="successTitle">Informações Cadastradas!</h3>
                 <p id="successMessage">Seus dados foram registrados com sucesso!</p>
@@ -574,7 +574,7 @@
     <div class="modal-overlay" id="errorModal">
         <div class="modal">
             <div class="modal-header">
-                <img src="/src/imgs/capacitatg.png"
+                <img src="/src/imgs/logo-arp.png"
                      alt="Logo Capacita TG">
                 <h3 id="errorTitle">Erro</h3>
                 <p id="errorMessage">Ocorreu um erro. Por favor, tente novamente.</p>
@@ -622,28 +622,29 @@
         const CIDADES_TG = Object.freeze({
             'arapiraca': { nome: 'Arapiraca', tg: '07-015' }
         });
-
+    
         class CapacitaTGManager {
             constructor() {
                 this.apiUrl = '/api';
                 this.currentCity = null;
                 this.currentUserType = null;
+                this.tempUserData = null; // Variável para armazenar dados temporariamente
                 this.init();
             }
-
+    
             init() {
                 this.setupEventListeners();
                 this.populateCitySelects();
                 this.setupFormValidation();
             }
-
+    
             populateCitySelects() {
                 const selects = ['cidadeAtirador', 'cidadeEmpresa'];
                 
                 selects.forEach(selectId => {
                     const select = document.getElementById(selectId);
                     if (!select) return;
-
+    
                     select.innerHTML = '<option value="">Selecione a cidade</option>';
                     const fragment = document.createDocumentFragment();
                     
@@ -654,26 +655,26 @@
                         option.dataset.tg = tg;
                         fragment.appendChild(option);
                     });
-
+    
                     select.appendChild(fragment);
                 });
             }
-
+    
             setupEventListeners() {
                 // Alternar entre login e cadastro
                 document.getElementById('showLogin').addEventListener('click', () => this.toggleForm('login'));
                 document.getElementById('showRegister').addEventListener('click', () => this.toggleForm('register'));
-
+    
                 // Evento de clique para o botão de fechar modal de erro
                 document.getElementById('closeErrorModal').addEventListener('click', () => this.hideModal('errorModal'));
-
+    
                 // Submissão do formulário de login
                 document.getElementById('loginForm').addEventListener('submit', this.handleLogin.bind(this));
                 
                 // Submissão do formulário de cadastro
                 document.getElementById('registerForm').addEventListener('submit', this.handleRegister.bind(this));
                 document.getElementById('registerForm').addEventListener('change', this.handleRegistrationChanges.bind(this));
-
+    
                 // Adicional
                 document.addEventListener('input', this.handleInputEvents.bind(this));
                 document.addEventListener('click', this.handleClickEvents.bind(this));
@@ -740,7 +741,7 @@
                     this.showLoadingState(false, loginBtn);
                 }
             }
-
+    
             // O código de cadastro será modificado para lidar com a senha.
             handleRegistrationChanges(event) {
                 const { target } = event;
@@ -754,17 +755,17 @@
                         break;
                 }
             }
-
+    
             handleUserTypeChange(userType) {
                 this.currentUserType = userType;
                 this.toggleUserTypeFields(userType);
                 this.setRequiredFields(userType);
             }
-
+    
             handleCityChange(cityKey) {
                 this.currentCity = cityKey;
             }
-
+    
             handleInputEvents(event) {
                 const { target } = event;
                 
@@ -772,7 +773,7 @@
                     this.applyPhoneMask(target);
                 }
             }
-
+            
             handleClickEvents(event) {
                 const { target } = event;
                 
@@ -780,9 +781,15 @@
                     this.hideModal(target.id);
                 } else if (target.id === 'closeSuccessModal') {
                     this.hideModal('successModal');
+                    
+                    // NOVO CÓDIGO: Realizar login e redirecionar após fechar o modal
+                    if (this.tempUserData) {
+                        localStorage.setItem('capacitaTgUser', JSON.stringify(this.tempUserData));
+                        window.location.href = 'index.html';
+                    }
                 }
             }
-
+    
             applyPhoneMask(input) {
                 let value = input.value.replace(/\D/g, '');
                 
@@ -802,49 +809,49 @@
                     input.value = value;
                 }
             }
-
+    
             toggleUserTypeFields(userType) {
                 const fieldsMap = {
                     'atirador': 'atiradorFields',
                     'empregador': 'empresaFields'
                 };
-
+    
                 Object.values(fieldsMap).forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) field.classList.remove('active');
                 });
-
+    
                 const targetField = document.getElementById(fieldsMap[userType]);
                 if (targetField) {
                     setTimeout(() => targetField.classList.add('active'), 50);
                 }
             }
-
+    
             setRequiredFields(userType) {
                 document.querySelectorAll('.dynamic-fields input, .dynamic-fields textarea, .dynamic-fields select')
                     .forEach(field => field.removeAttribute('required'));
-
+    
                 const requiredFields = {
                     'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'habilidadesAtirador', 'senhaAtirador'],
                     'empregador': ['nomeEmpresa', 'cidadeEmpresa', 'emailEmpresa', 'senhaEmpresa']
                 };
-
+    
                 requiredFields[userType]?.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) field.setAttribute('required', '');
                 });
             }
-
+    
             setupFormValidation() {
                 const form = document.getElementById('registerForm');
                 if (!form) return;
-
+    
                 form.addEventListener('invalid', (event) => {
                     event.preventDefault();
                     this.showValidationError(event.target);
                 }, true);
             }
-
+    
             showValidationError(field) {
                 field.focus();
                 field.classList.add('error');
@@ -855,11 +862,11 @@
                 event.preventDefault();
                 
                 if (!this.validateRegistrationForm()) return;
-
+    
                 const userData = this.collectRegistrationData();
                 await this.submitToAPI(userData);
             }
-
+    
             validateRegistrationForm() {
                 const form = document.getElementById('registerForm');
                 const isValid = form.checkValidity();
@@ -868,12 +875,12 @@
                     form.reportValidity();
                     return false;
                 }
-
+    
                 if (!this.currentCity) {
                     this.showErrorMessage('Por favor, selecione uma cidade válida.');
                     return false;
                 }
-
+    
                 if (this.currentUserType === 'atirador') {
                     const telefone = document.getElementById('telefoneAtirador').value;
                     if (telefone && telefone.length < 14) {
@@ -881,10 +888,10 @@
                         return false;
                     }
                 }
-
+    
                 return true;
             }
-
+    
             collectRegistrationData() {
                 const userType = this.currentUserType;
                 const cityData = CIDADES_TG[this.currentCity];
@@ -895,7 +902,7 @@
                     cidadeKey: this.currentCity,
                     tg: cityData.tg
                 };
-
+    
                 if (userType === 'atirador') {
                     return {
                         ...baseData,
@@ -908,11 +915,11 @@
                     };
                 }
             }
-
+    
             getAtiradorData() {
                 const fields = ['nomeAtirador', 'emailAtirador', 'telefoneAtirador', 'habilidadesAtirador', 'experienciaAtirador', 'formacaoAtirador', 'senhaAtirador'];
                 const data = {};
-
+    
                 fields.forEach(field => {
                     const element = document.getElementById(field);
                     if (element) {
@@ -920,10 +927,10 @@
                         data[key] = element.value.trim();
                     }
                 });
-
+    
                 return data;
             }
-
+    
             getEmpresaData() {
                 const fieldMap = {
                     'nomeEmpresa': 'nomeEmpresa',
@@ -931,7 +938,7 @@
                     'informacoesEmpresa': 'informacoes',
                     'senhaEmpresa': 'senha'
                 };
-
+    
                 const data = {};
                 Object.entries(fieldMap).forEach(([elementId, dataKey]) => {
                     const element = document.getElementById(elementId);
@@ -939,7 +946,7 @@
                         data[dataKey] = element.value.trim();
                     }
                 });
-
+    
                 return data;
             }
             
@@ -956,15 +963,18 @@
                         },
                         body: JSON.stringify(userData)
                     });
-
+    
                     const responseData = await response.json();
-
+    
                     if (!response.ok) {
                         throw new Error(responseData.error || 'Erro ao cadastrar dados');
                     }
-
-                    this.showSuccessModal(userData);
+    
+                    // NOVO CÓDIGO: Armazena temporariamente os dados e mostra o modal de sucesso
+                    this.tempUserData = responseData;
+                    this.showSuccessModal(responseData);
                     this.clearRegistrationForm();
+                    
                 } catch (error) {
                     console.error('Error submitting to API:', error);
                     this.showErrorMessage(error.message || 'Erro ao cadastrar. Tente novamente.');
@@ -973,7 +983,7 @@
                     this.showLoadingState(false, submitBtn);
                 }
             }
-
+    
             showLoadingState(show, button) {
                 if (show) {
                     button.disabled = true;
@@ -987,13 +997,13 @@
                     }
                 }
             }
-
+    
             showErrorMessage(message) {
                 const errorModal = document.getElementById('errorModal');
                 document.getElementById('errorMessage').textContent = message;
                 this.showModal('errorModal');
             }
-
+    
             clearRegistrationForm() {
                 const form = document.getElementById('registerForm');
                 if (form) {
@@ -1007,18 +1017,18 @@
                     });
                 }
             }
-
+    
             showSuccessModal(userData) {
                 const modalInfo = this.buildSuccessModalContent(userData);
                 const userDataDisplay = document.getElementById('userDataDisplay');
                 const successMessage = document.getElementById('successMessage');
-
+    
                 if (userDataDisplay) userDataDisplay.innerHTML = modalInfo.dataHTML;
                 if (successMessage) successMessage.textContent = modalInfo.message;
-
+    
                 this.showModal('successModal');
             }
-
+    
             buildSuccessModalContent(userData) {
                 const isAtirador = userData.tipoUsuario === 'atirador';
                 
@@ -1034,14 +1044,14 @@
                     <p><strong>Email:</strong> ${userData.email}</p>
                     <p><strong>Tipo:</strong> Empresa</p>
                 `;
-
+    
                 const message = isAtirador
                     ? 'Suas informações foram cadastradas com sucesso! Você foi registrado em nossa base de alunos.'
                     : 'Suas informações foram cadastradas com sucesso! Sua empresa foi registrada em nossa base de parceiros.';
-
+    
                 return { dataHTML, message };
             }
-
+    
             showModal(modalId) {
                 const modal = document.getElementById(modalId);
                 if (modal) {
@@ -1049,7 +1059,7 @@
                     document.body.style.overflow = 'hidden';
                 }
             }
-
+    
             hideModal(modalId) {
                 const modal = document.getElementById(modalId);
                 if (modal) {
@@ -1058,11 +1068,11 @@
                 }
             }
         }
-
+    
         document.addEventListener('DOMContentLoaded', () => {
             new CapacitaTGManager();
         });
-
+    
         window.CapacitaTG = {
             getCityTG: (cityKey) => CIDADES_TG[cityKey],
             getAllCities: () => Object.keys(CIDADES_TG)
