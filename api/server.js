@@ -200,27 +200,16 @@ async function writeCompanies(companiesData) {
 }
 
 // GET /api/students - Pega todos os alunos/atiradores
-app.get('/api/students', async (req, res) => {
-  try {
-    const students = await readStudents();
-    res.json(students);
-  } catch (error) {
-    console.error('Error fetching students:', error);
-    res.status(500).json({ error: 'Failed to fetch students' });
-  }
-});
-
-// POST /api/students - Adiciona um novo aluno/atirador
 app.post('/api/students', async (req, res) => {
   try {
-    const { nome, cidade, email, telefone, habilidades, experiencia, formacao } = req.body;
+    const { nome, cidade, email, telefone, habilidades, experiencia, formacao, senha } = req.body;
 
-    if (!nome || !cidade || !email || !telefone || !habilidades) {
-      return res.status(400).json({ error: 'Nome, cidade, email, telefone e habilidades são obrigatórios' });
+    if (!nome || !cidade || !email || !telefone || !habilidades || !senha) {
+      return res.status(400).json({ error: 'Nome, cidade, email, telefone, habilidades e senha são obrigatórios' });
     }
 
     const allStudents = await readStudents();
-    
+
     // Verificar se email já existe
     const existingStudent = allStudents.find(student => student.email === email);
     if (existingStudent) {
@@ -236,13 +225,14 @@ app.post('/api/students', async (req, res) => {
       habilidades,
       experiencia: experiencia || '',
       formacao: formacao || '',
+      senha,
       tipo: 'atirador',
       dataRegistro: new Date().toISOString()
     };
 
     allStudents.push(newStudent);
-    
-    const success = await writeStudents(allStudents);
+
+    const success = await writeStudents(allCourses);
     if (!success) {
       return res.status(500).json({ error: 'Failed to save student' });
     }
@@ -254,28 +244,17 @@ app.post('/api/students', async (req, res) => {
   }
 });
 
-// GET /api/companies - Pega todas as empresas
-app.get('/api/companies', async (req, res) => {
-  try {
-    const companies = await readCompanies();
-    res.json(companies);
-  } catch (error) {
-    console.error('Error fetching companies:', error);
-    res.status(500).json({ error: 'Failed to fetch companies' });
-  }
-});
-
 // POST /api/companies - Adiciona uma nova empresa
 app.post('/api/companies', async (req, res) => {
   try {
-    const { nomeEmpresa, cidade, email, informacoes } = req.body;
+    const { nomeEmpresa, cidade, email, informacoes, senha } = req.body;
 
-    if (!nomeEmpresa || !cidade || !email) {
-      return res.status(400).json({ error: 'Nome da empresa, cidade e email são obrigatórios' });
+    if (!nomeEmpresa || !cidade || !email || !senha) {
+      return res.status(400).json({ error: 'Nome da empresa, cidade, email e senha são obrigatórios' });
     }
 
     const allCompanies = await readCompanies();
-    
+
     // Verificar se email já existe
     const existingCompany = allCompanies.find(company => company.email === email);
     if (existingCompany) {
@@ -288,12 +267,13 @@ app.post('/api/companies', async (req, res) => {
       cidade,
       email,
       informacoes: informacoes || '',
+      senha,
       tipo: 'empresa',
       dataRegistro: new Date().toISOString()
     };
 
     allCompanies.push(newCompany);
-    
+
     const success = await writeCompanies(allCompanies);
     if (!success) {
       return res.status(500).json({ error: 'Failed to save company' });
@@ -303,6 +283,42 @@ app.post('/api/companies', async (req, res) => {
   } catch (error) {
     console.error('Error creating company:', error);
     res.status(500).json({ error: 'Failed to create company' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+    }
+
+    const allStudents = await readStudents();
+    const allCompanies = await readCompanies();
+
+    // Procurar por um atirador com as credenciais corretas
+    const student = allStudents.find(s => s.email === email && s.senha === senha);
+    if (student) {
+      // Remover a senha do objeto antes de enviar
+      const { senha, ...studentWithoutPassword } = student;
+      return res.json(studentWithoutPassword);
+    }
+
+    // Se não for um atirador, procurar por uma empresa
+    const company = allCompanies.find(c => c.email === email && c.senha === senha);
+    if (company) {
+      // Remover a senha do objeto antes de enviar
+      const { senha, ...companyWithoutPassword } = company;
+      return res.json(companyWithoutPassword);
+    }
+
+    // Se nenhuma correspondência for encontrada
+    res.status(401).json({ error: 'Email ou senha incorretos' });
+
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ error: 'Failed to log in' });
   }
 });
 
