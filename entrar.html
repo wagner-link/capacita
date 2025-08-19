@@ -411,6 +411,26 @@
                                 </div>
                             </div>
 
+                            <div class="two-columns">
+                                <div class="form-group">
+                                    <label for="idadeAtirador">Idade *</label>
+                                    <input type="number" id="idadeAtirador" name="idade" placeholder="Ex: 25" min="16" max="65" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="escolaridadeAtirador">Escolaridade *</label>
+                                    <select id="escolaridadeAtirador" name="escolaridade" required>
+                                        <option value="">Selecione sua escolaridade</option>
+                                        <option value="fundamental-incompleto">Ensino Fundamental Incompleto</option>
+                                        <option value="fundamental-completo">Ensino Fundamental Completo</option>
+                                        <option value="medio-incompleto">Ensino Médio Incompleto</option>
+                                        <option value="medio-completo">Ensino Médio Completo</option>
+                                        <option value="superior-incompleto">Ensino Superior Incompleto</option>
+                                        <option value="superior-completo">Ensino Superior Completo</option>
+                                        <option value="pos-graduacao">Pós-graduação</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label for="habilidadesAtirador">Habilidades *</label>
                                 <textarea id="habilidadesAtirador" name="habilidades" placeholder="Descreva suas principais habilidades e competências (ex: Liderança, Disciplina, Trabalho em equipe, etc.)"></textarea>
@@ -434,16 +454,42 @@
                                     <input type="text" id="nomeEmpresa" name="nomeEmpresa" placeholder="Digite o nome da empresa">
                                 </div>
                                 <div class="form-group">
+                                    <label for="cnpjEmpresa">CNPJ *</label>
+                                    <input type="text" id="cnpjEmpresa" name="cnpj" placeholder="00.000.000/0000-00" required>
+                                </div>
+                            </div>
+
+                            <div class="two-columns">
+                                <div class="form-group">
                                     <label for="cidadeEmpresa">Cidade *</label>
                                     <select id="cidadeEmpresa" name="cidade" required>
                                         <option value="">Selecione a cidade da empresa</option>
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label for="telefoneEmpresa">Telefone *</label>
+                                    <input type="tel" id="telefoneEmpresa" name="telefone" placeholder="(82) 99999-9999" required>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="emailEmpresa">E-mail de Contato *</label>
-                                <input type="email" id="emailEmpresa" name="email" placeholder="Digite o e-mail de contato da empresa">
+                            <div class="two-columns">
+                                <div class="form-group">
+                                    <label for="emailEmpresa">E-mail de Contato *</label>
+                                    <input type="email" id="emailEmpresa" name="email" placeholder="Digite o e-mail de contato da empresa">
+                                </div>
+                                <div class="form-group">
+                                    <label for="setorEmpresa">Setor de Atuação *</label>
+                                    <select id="setorEmpresa" name="setor" required>
+                                        <option value="">Selecione o setor</option>
+                                        <option value="comercio">Comércio</option>
+                                        <option value="servicos">Serviços</option>
+                                        <option value="industria">Indústria</option>
+                                        <option value="tecnologia">Tecnologia</option>
+                                        <option value="saude">Saúde</option>
+                                        <option value="educacao">Educação</option>
+                                        <option value="outros">Outros</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -584,8 +630,10 @@
             handleInputEvents(event) {
                 const { target } = event;
                 
-                if (target.id === 'telefoneAtirador') {
+                if (target.id === 'telefoneAtirador' || target.id === 'telefoneEmpresa') {
                     this.applyPhoneMask(target);
+                } else if (target.id === 'cnpjEmpresa') {
+                    this.applyCNPJMask(target);
                 }
             }
 
@@ -619,6 +667,28 @@
                 }
             }
 
+            applyCNPJMask(input) {
+                let value = input.value.replace(/\D/g, '');
+                
+                if (value.length > 14) {
+                    value = value.slice(0, 14);
+                }
+                
+                if (value.length >= 14) {
+                    input.value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                } else if (value.length >= 12) {
+                    input.value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+                } else if (value.length >= 8) {
+                    input.value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, '$1.$2.$3/$4');
+                } else if (value.length >= 5) {
+                    input.value = value.replace(/^(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+                } else if (value.length >= 2) {
+                    input.value = value.replace(/^(\d{2})(\d{0,3})/, '$1.$2');
+                } else {
+                    input.value = value;
+                }
+            }
+
             toggleUserTypeFields(userType) {
                 const fieldsMap = {
                     'atirador': 'atiradorFields',
@@ -641,8 +711,8 @@
                     .forEach(field => field.removeAttribute('required'));
 
                 const requiredFields = {
-                    'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'habilidadesAtirador'],
-                    'empregador': ['nomeEmpresa', 'cidadeEmpresa', 'emailEmpresa']
+                    'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'idadeAtirador', 'escolaridadeAtirador', 'habilidadesAtirador'],
+                    'empregador': ['nomeEmpresa', 'cnpjEmpresa', 'cidadeEmpresa', 'telefoneEmpresa', 'emailEmpresa', 'setorEmpresa']
                 };
 
                 requiredFields[userType]?.forEach(fieldId => {
@@ -732,7 +802,7 @@
             }
 
             getAtiradorData() {
-                const fields = ['nomeAtirador', 'emailAtirador', 'telefoneAtirador', 'habilidadesAtirador', 'experienciaAtirador', 'formacaoAtirador'];
+                const fields = ['nomeAtirador', 'emailAtirador', 'telefoneAtirador', 'idadeAtirador', 'escolaridadeAtirador', 'habilidadesAtirador', 'experienciaAtirador', 'formacaoAtirador'];
                 const data = {};
 
                 fields.forEach(field => {
@@ -749,7 +819,10 @@
             getEmpresaData() {
                 const fieldMap = {
                     'nomeEmpresa': 'nomeEmpresa',
+                    'cnpjEmpresa': 'cnpj',
+                    'telefoneEmpresa': 'telefone',
                     'emailEmpresa': 'email',
+                    'setorEmpresa': 'setor',
                     'informacoesEmpresa': 'informacoes'
                 };
 
