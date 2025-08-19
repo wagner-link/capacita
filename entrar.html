@@ -642,7 +642,6 @@
             checkAndRedirectIfLoggedIn() {
                 const userData = localStorage.getItem('capacitaTgUser');
                 if (userData) {
-                    // Se já estiver logado, redireciona para a página inicial
                     window.location.href = 'index.html';
                 }
             }
@@ -670,29 +669,23 @@
             }
     
             setupEventListeners() {
-                // Alternar entre login e cadastro
                 document.getElementById('showLogin').addEventListener('click', () => this.toggleForm('login'));
                 document.getElementById('showRegister').addEventListener('click', () => this.toggleForm('register'));
     
-                // Evento de clique para os botões dos modais
                 document.getElementById('closeErrorModal').addEventListener('click', () => this.hideModal('errorModal'));
                 document.getElementById('closeSuccessModal').addEventListener('click', () => {
                     this.hideModal('successModal');
-                    // Redireciona e loga o usuário após a confirmação do modal de sucesso
+                    
                     if (this.tempUserData) {
                         localStorage.setItem('capacitaTgUser', JSON.stringify(this.tempUserData));
                         window.location.href = 'index.html';
                     }
                 });
     
-                // Submissão do formulário de login
                 document.getElementById('loginForm').addEventListener('submit', this.handleLogin.bind(this));
-                
-                // Submissão do formulário de cadastro
                 document.getElementById('registerForm').addEventListener('submit', this.handleRegister.bind(this));
                 document.getElementById('registerForm').addEventListener('change', this.handleRegistrationChanges.bind(this));
     
-                // Adicional
                 document.addEventListener('input', this.handleInputEvents.bind(this));
                 document.addEventListener('click', this.handleClickEvents.bind(this));
             }
@@ -791,7 +784,6 @@
                 const { target } = event;
                 
                 if (target.classList.contains('modal-overlay') && !target.closest('.modal')) {
-                    // Apenas fecha o modal se o clique for no overlay e não no modal em si
                     this.hideModal(target.id);
                 }
             }
