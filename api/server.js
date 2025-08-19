@@ -199,6 +199,41 @@ async function writeCompanies(companiesData) {
   }
 }
 
+// PUT /api/courses/reorder - Atualiza a ordem dos cursos
+app.put('/api/courses/reorder', async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: 'Ordered IDs must be an array' });
+    }
+
+    const allCourses = await readCourses();
+
+    // Crie um mapa para acesso rápido aos cursos por ID
+    const coursesMap = new Map(allCourses.map(course => [course.id, course]));
+
+    // Reordene os cursos com base no array de IDs recebido
+    const reorderedCourses = orderedIds.map(id => coursesMap.get(id)).filter(Boolean);
+
+    // Verifique se a contagem corresponde (para evitar dados perdidos)
+    if (reorderedCourses.length !== allCourses.length) {
+         return res.status(400).json({ error: 'Incomplete list of courses provided' });
+    }
+
+    const success = await writeCourses(reorderedCourses);
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to save reordered courses' });
+    }
+
+    res.json(reorderedCourses);
+
+  } catch (error) {
+    console.error('Error reordering courses:', error);
+    res.status(500).json({ error: 'Failed to reorder courses' });
+  }
+});
+
 // GET /api/students - Pega todos os alunos/atiradores
 app.get('/api/students', async (req, res) => {
   try {

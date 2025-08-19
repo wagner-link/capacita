@@ -33,6 +33,10 @@
                     <span class="nav-icon">📚</span>
                     Cursos
                 </button>
+                <button class="nav-tab" data-section="reorder">
+                    <span class="nav-icon">🔄</span>
+                    Ordenar Cursos
+                </button>
                 <button class="nav-tab" data-section="students">
                     <span class="nav-icon">🎓</span>
                     Alunos
@@ -137,6 +141,30 @@
                             <!-- Cursos seram carregados aqui -->
                         </tbody>
                     </table>
+                </div>
+
+                <div class="content-section" id="reorderSection">
+                    <div class="dashboard-header">
+                        <h2>Ordenar Cursos</h2>
+                        <button class="btn btn-primary" id="saveOrderBtn">
+                            <span class="btn-icon">💾</span>
+                            Salvar Ordem
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Arraste e Solte para reordenar</h3>
+                        </div>
+                        <ul class="reorder-list" id="reorderList">
+                            </ul>
+                        <div class="loading-state" id="reorderLoadingState" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Carregando cursos...</p>
+                        </div>
+                        <div class="empty-state" id="reorderEmptyState" style="display: none;">
+                            <h3>Nenhum curso encontrado</h3>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="loading-state" id="loadingState">

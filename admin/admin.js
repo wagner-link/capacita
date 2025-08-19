@@ -36,6 +36,9 @@ class AdminDashboard {
             this.openCourseModal();
         });
 
+        // Listeners para a nova aba de ordenação
+        document.getElementById('saveOrderBtn').addEventListener('click', this.saveOrder.bind(this));
+
         // Modal controls
         document.getElementById('closeModal').addEventListener('click', this.closeCourseModal.bind(this));
         document.getElementById('cancelBtn').addEventListener('click', this.closeCourseModal.bind(this));
@@ -190,6 +193,90 @@ class AdminDashboard {
                 </td>
             </tr>
         `).join('');
+    }
+
+    renderReorderList() {
+        const reorderList = document.getElementById('reorderList');
+        const reorderLoadingState = document.getElementById('reorderLoadingState');
+        const reorderEmptyState = document.getElementById('reorderEmptyState');
+    
+        if (this.courses.length === 0) {
+            reorderEmptyState.style.display = 'block';
+            reorderList.style.display = 'none';
+            reorderLoadingState.style.display = 'none';
+            return;
+        }
+    
+        reorderEmptyState.style.display = 'none';
+        reorderList.style.display = 'block';
+        reorderList.innerHTML = this.courses.map(course => `
+            <li class="reorder-list-item" draggable="true" data-id="${course.id}">
+                <span class="reorder-list-handle">☰</span>
+                <span class="reorder-list-title">${this.escapeHtml(course.title)}</span>
+            </li>
+        `).join('');
+    
+        this.setupDragAndDrop();
+    }
+
+    setupDragAndDrop() {
+        const list = document.getElementById('reorderList');
+        let dragSrcEl = null;
+    
+        list.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('reorder-list-item')) {
+                e.target.classList.add('dragging');
+                dragSrcEl = e.target;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', e.target.innerHTML);
+            }
+        });
+    
+        list.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const target = e.target.closest('.reorder-list-item');
+            if (target && target !== dragSrcEl && !target.classList.contains('dragging')) {
+                const rect = target.getBoundingClientRect();
+                const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                list.insertBefore(dragSrcEl, next && target.nextSibling || target);
+            }
+        });
+    
+        list.addEventListener('dragend', (e) => {
+            e.target.classList.remove('dragging');
+        });
+    }
+
+    async saveOrder() {
+        const reorderList = document.getElementById('reorderList');
+        const orderedIds = Array.from(reorderList.children).map(item => item.dataset.id);
+    
+        try {
+            this.showButtonLoading('saveOrderBtn', true);
+            const response = await fetch(`${this.apiUrl}/courses/reorder`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ orderedIds })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const newCourses = await response.json();
+            this.courses = newCourses;
+            this.filteredCourses = [...newCourses];
+            this.renderCourses(); // Atualize a tabela na aba principal
+            this.showToast('Ordem dos cursos salva com sucesso!');
+        } catch (error) {
+            console.error('Error saving order:', error);
+            this.showToast('Erro ao salvar a ordem. Tente novamente.', 'error');
+        } finally {
+            this.showButtonLoading('saveOrderBtn', false);
+        }
     }
 
     updateStats() {
@@ -521,6 +608,14 @@ class AdminDashboard {
         document.querySelectorAll('.content-section').forEach(content => {
             content.classList.toggle('active', content.id === `${section}Section`);
         });
+
+        document.querySelectorAll('.content-section').forEach(content => {
+            content.classList.toggle('active', content.id === `${section}Section`);
+        });
+    
+        if (section === 'reorder') {
+            this.renderReorderList();
+        }
     }
 
     // Students methods
