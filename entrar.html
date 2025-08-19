@@ -628,7 +628,7 @@
                 this.apiUrl = '/api';
                 this.currentCity = null;
                 this.currentUserType = null;
-                this.tempUserData = null; // Variável para armazenar dados temporariamente
+                this.tempUserData = null;
                 this.init();
             }
     
@@ -636,6 +636,15 @@
                 this.setupEventListeners();
                 this.populateCitySelects();
                 this.setupFormValidation();
+                this.checkAndRedirectIfLoggedIn();
+            }
+            
+            checkAndRedirectIfLoggedIn() {
+                const userData = localStorage.getItem('capacitaTgUser');
+                if (userData) {
+                    // Se já estiver logado, redireciona para a página inicial
+                    window.location.href = 'index.html';
+                }
             }
     
             populateCitySelects() {
@@ -665,8 +674,16 @@
                 document.getElementById('showLogin').addEventListener('click', () => this.toggleForm('login'));
                 document.getElementById('showRegister').addEventListener('click', () => this.toggleForm('register'));
     
-                // Evento de clique para o botão de fechar modal de erro
+                // Evento de clique para os botões dos modais
                 document.getElementById('closeErrorModal').addEventListener('click', () => this.hideModal('errorModal'));
+                document.getElementById('closeSuccessModal').addEventListener('click', () => {
+                    this.hideModal('successModal');
+                    // Redireciona e loga o usuário após a confirmação do modal de sucesso
+                    if (this.tempUserData) {
+                        localStorage.setItem('capacitaTgUser', JSON.stringify(this.tempUserData));
+                        window.location.href = 'index.html';
+                    }
+                });
     
                 // Submissão do formulário de login
                 document.getElementById('loginForm').addEventListener('submit', this.handleLogin.bind(this));
@@ -729,11 +746,8 @@
                         throw new Error(data.error || 'Erro ao fazer login. Tente novamente.');
                     }
                     
-                    // Login bem-sucedido: Salvar dados no localStorage
                     localStorage.setItem('capacitaTgUser', JSON.stringify(data));
-                    
-                    // Redirecionar para o dashboard ou página inicial
-                    window.location.href = 'index.html'; // Redireciona para o index por enquanto
+                    window.location.href = 'index.html'; 
                     
                 } catch (error) {
                     this.showErrorMessage(error.message || 'Erro ao fazer login. Por favor, verifique suas credenciais.');
@@ -742,7 +756,6 @@
                 }
             }
     
-            // O código de cadastro será modificado para lidar com a senha.
             handleRegistrationChanges(event) {
                 const { target } = event;
                 
@@ -777,16 +790,9 @@
             handleClickEvents(event) {
                 const { target } = event;
                 
-                if (target.classList.contains('modal-overlay')) {
+                if (target.classList.contains('modal-overlay') && !target.closest('.modal')) {
+                    // Apenas fecha o modal se o clique for no overlay e não no modal em si
                     this.hideModal(target.id);
-                } else if (target.id === 'closeSuccessModal') {
-                    this.hideModal('successModal');
-                    
-                    // NOVO CÓDIGO: Realizar login e redirecionar após fechar o modal
-                    if (this.tempUserData) {
-                        localStorage.setItem('capacitaTgUser', JSON.stringify(this.tempUserData));
-                        window.location.href = 'index.html';
-                    }
                 }
             }
     
@@ -970,7 +976,7 @@
                         throw new Error(responseData.error || 'Erro ao cadastrar dados');
                     }
     
-                    // NOVO CÓDIGO: Armazena temporariamente os dados e mostra o modal de sucesso
+                    // Armazena temporariamente os dados e mostra o modal de sucesso
                     this.tempUserData = responseData;
                     this.showSuccessModal(responseData);
                     this.clearRegistrationForm();
@@ -1030,7 +1036,7 @@
             }
     
             buildSuccessModalContent(userData) {
-                const isAtirador = userData.tipoUsuario === 'atirador';
+                const isAtirador = userData.tipo === 'atirador';
                 
                 const dataHTML = isAtirador ? `
                     <p><strong>Nome:</strong> ${userData.nome}</p>
