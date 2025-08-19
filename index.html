@@ -262,7 +262,7 @@
     <div class="modal-overlay" id="logoutConfirmModal">
         <div class="modal">
             <div class="modal-header">
-                <img src="/src/imgs/capacitatg.png" 
+                <img src="/src/imgs/logo-arp.png" 
                      alt="Logo Capacita TG">
                 <h3>Confirmar Logout</h3>
                 <p>Tem certeza que deseja sair?</p>
@@ -282,7 +282,7 @@
     <div class="modal-overlay" id="successModal">
         <div class="modal">
             <div class="modal-header">
-                <img src="/src/imgs/capacitatg.png" 
+                <img src="/src/imgs/logo-arp.png" 
                      alt="Logo Capacita TG">
                 <h3 id="successTitle">Sucesso!</h3>
                 <p id="successMessage">Operação realizada com sucesso!</p>
@@ -296,7 +296,7 @@
     <div class="modal-overlay" id="systemAccessModal">
         <div class="modal">
             <div class="modal-header">
-                <img src="/src/imgs/capacitatg.png" 
+                <img src="/src/imgs/logo-arp.png" 
                      alt="Logo Capacita TG">
                 <h3>Acessar Sistema</h3>
                 <p>Redirecionando para a área principal</p>
@@ -521,7 +521,7 @@
                 document.getElementById('modalUserName').textContent = user.nome;
                 document.getElementById('modalUserEmail').textContent = user.email;
                 document.getElementById('modalUserType').textContent = 
-                    user.tipoUsuario === 'atirador' ? 'Atirador' : 'Empregador';
+                    user.tipo === 'aluno' ? 'Aluno' : 'Empregador';
                 showModal('userProfileModal');
             } else {
                 // Se não estiver logado, redirecionar diretamente para entrar.html
