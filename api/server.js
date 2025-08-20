@@ -248,10 +248,10 @@ app.get('/api/students', async (req, res) => {
 // POST /api/students - Adiciona um novo aluno/atirador
 app.post('/api/students', async (req, res) => {
   try {
-    const { nome, cidade, email, telefone, habilidades, experiencia, formacao } = req.body;
+    const { nome, cidade, email, telefone, idade, escolaridade, habilidades, experiencia, formacao } = req.body;
 
-    if (!nome || !cidade || !email || !telefone || !habilidades) {
-      return res.status(400).json({ error: 'Nome, cidade, email, telefone e habilidades são obrigatórios' });
+    if (!nome || !cidade || !email || !telefone || !idade || !escolaridade || !habilidades) {
+      return res.status(400).json({ error: 'Nome, cidade, email, telefone, idade, escolaridade e habilidades são obrigatórios' });
     }
 
     const allStudents = await readStudents();
@@ -268,6 +268,8 @@ app.post('/api/students', async (req, res) => {
       cidade,
       email,
       telefone,
+      idade: parseInt(idade),
+      escolaridade,
       habilidades,
       experiencia: experiencia || '',
       formacao: formacao || '',
@@ -303,10 +305,10 @@ app.get('/api/companies', async (req, res) => {
 // POST /api/companies - Adiciona uma nova empresa
 app.post('/api/companies', async (req, res) => {
   try {
-    const { nomeEmpresa, cidade, email, informacoes } = req.body;
+    const { nomeEmpresa, cnpj, cidade, telefone, email, setor, informacoes } = req.body;
 
-    if (!nomeEmpresa || !cidade || !email) {
-      return res.status(400).json({ error: 'Nome da empresa, cidade e email são obrigatórios' });
+    if (!nomeEmpresa || !cnpj || !cidade || !telefone || !email || !setor) {
+      return res.status(400).json({ error: 'Nome da empresa, CNPJ, cidade, telefone, email e setor são obrigatórios' });
     }
 
     const allCompanies = await readCompanies();
@@ -317,11 +319,20 @@ app.post('/api/companies', async (req, res) => {
       return res.status(409).json({ error: 'Já existe uma empresa cadastrada com este email' });
     }
 
+    // Verificar se CNPJ já existe
+    const existingCNPJ = allCompanies.find(company => company.cnpj === cnpj);
+    if (existingCNPJ) {
+      return res.status(409).json({ error: 'Já existe uma empresa cadastrada com este CNPJ' });
+    }
+
     const newCompany = {
       id: generateId(),
       nomeEmpresa,
+      cnpj,
       cidade,
+      telefone,
       email,
+      setor,
       informacoes: informacoes || '',
       tipo: 'empresa',
       dataRegistro: new Date().toISOString()
