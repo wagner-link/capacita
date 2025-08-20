@@ -82,6 +82,8 @@ app.post('/api/courses', async (req, res) => {
       courseUrl,
       page,
       downloadUrl,
+      buttonText: req.body.buttonText || 'Inscreva-se',
+      createdAt: new Date().toISOString(),
     };
 
     allCourses.push(newCourse);
@@ -115,7 +117,19 @@ app.put('/api/courses/:id', async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    const updatedCourse = { id, title, category, description, imageUrl, courseUrl, page, downloadUrl };
+    const updatedCourse = { 
+      ...allCourses[courseIndex], // Manter dados existentes
+      id, 
+      title, 
+      category, 
+      description, 
+      imageUrl, 
+      courseUrl, 
+      page, 
+      downloadUrl,
+      buttonText: req.body.buttonText || allCourses[courseIndex].buttonText || 'Inscreva-se',
+      updatedAt: new Date().toISOString()
+    };
     allCourses[courseIndex] = updatedCourse;
     
     const success = await writeCourses(allCourses);

@@ -104,7 +104,7 @@ class CourseLoader {
     
             // Lógica para determinar o texto e o link do botão
             const isDownload = course.downloadUrl && course.downloadUrl.trim() !== '';
-            const buttonText = isDownload ? 'Baixar' : this.getButtonText(course.courseUrl);
+            const buttonText = course.buttonText || (isDownload ? 'Baixar' : this.getButtonText(course.courseUrl));
             const buttonUrl = isDownload ? course.downloadUrl : course.courseUrl;
             const downloadAttribute = isDownload ? 'download' : ''; // Adiciona o atributo de download
     

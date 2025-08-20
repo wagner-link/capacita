@@ -54,11 +54,22 @@ class AdminDashboard {
 
         // Filters
         document.getElementById('pageFilter').addEventListener('change', this.applyFilters.bind(this));
+        document.getElementById('sortFilter').addEventListener('change', this.applyFilters.bind(this));
         document.getElementById('searchInput').addEventListener('input', this.applyFilters.bind(this));
 
         // Image preview
         document.getElementById('courseImageUrl').addEventListener('input', this.updateImagePreview.bind(this));
 
+        // Button text customization
+        document.getElementById('buttonTextSelect').addEventListener('change', this.handleButtonTextChange.bind(this));
+
+        // Clickable stats for area details
+        document.querySelectorAll('.clickable-stat').forEach(stat => {
+            stat.addEventListener('click', (e) => {
+                const area = e.currentTarget.dataset.area;
+                this.showAreaDetails(area);
+            });
+        });
         // Navigation tabs
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
@@ -81,6 +92,10 @@ class AdminDashboard {
         document.getElementById('closeCompanyModal')?.addEventListener('click', () => this.hideModal('companyModal'));
         document.getElementById('closeCompanyDetailsBtn')?.addEventListener('click', () => this.hideModal('companyModal'));
 
+        // Area details modal
+        document.getElementById('closeAreaDetailsModal')?.addEventListener('click', () => this.hideModal('areaDetailsModal'));
+        document.getElementById('closeAreaDetailsBtn')?.addEventListener('click', () => this.hideModal('areaDetailsModal'));
+
         // Close modals on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
@@ -91,6 +106,69 @@ class AdminDashboard {
         });
     }
 
+    handleButtonTextChange() {
+        const select = document.getElementById('buttonTextSelect');
+        const customInput = document.getElementById('customButtonText');
+        
+        if (select.value === 'custom') {
+            customInput.style.display = 'block';
+            customInput.required = true;
+        } else {
+            customInput.style.display = 'none';
+            customInput.required = false;
+            customInput.value = '';
+        }
+    }
+
+    showAreaDetails(area) {
+        const areaNames = {
+            'empreend.html': 'Empreendedorismo',
+            'primeiroemprego.html': 'Primeiro Emprego',
+            'novoemp.html': 'Novo Emprego',
+            'financ.html': 'Educação Financeira',
+            'habitos.html': 'Hábitos Saudáveis'
+        };
+        
+        const areaName = areaNames[area] || 'Área Desconhecida';
+        const areaCourses = this.courses.filter(course => course.page === area);
+        const activeCourses = areaCourses.length; // Todos são considerados ativos por enquanto
+        
+        // Ordenar cursos por data de criação (mais recentes primeiro)
+        const recentCourses = areaCourses
+            .sort((a, b) => new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now()))
+            .slice(0, 5);
+        
+        // Última atualização (curso mais recente)
+        const lastUpdate = areaCourses.length > 0 
+            ? new Date(Math.max(...areaCourses.map(c => new Date(c.createdAt || Date.now())))).toLocaleDateString('pt-BR')
+            : 'Nenhuma';
+        
+        // Preencher modal
+        document.getElementById('areaDetailsTitle').textContent = `Detalhes - ${areaName}`;
+        document.getElementById('areaTotalCourses').textContent = areaCourses.length;
+        document.getElementById('areaActiveCourses').textContent = activeCourses;
+        document.getElementById('areaLastUpdate').textContent = lastUpdate;
+        
+        // Preencher lista de cursos recentes
+        const recentCoursesList = document.getElementById('recentCoursesList');
+        if (recentCourses.length === 0) {
+            recentCoursesList.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 2rem;">Nenhum curso encontrado nesta área.</p>';
+        } else {
+            recentCoursesList.innerHTML = recentCourses.map(course => `
+                <div class="recent-course-item">
+                    <div class="recent-course-info">
+                        <div class="recent-course-title">${this.escapeHtml(course.title)}</div>
+                        <div class="recent-course-category">${this.escapeHtml(course.category)}</div>
+                    </div>
+                    <div class="recent-course-date">
+                        ${new Date(course.createdAt || Date.now()).toLocaleDateString('pt-BR')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        this.showModal('areaDetailsModal');
+    }
     isLoggedIn() {
         const loggedIn = localStorage.getItem('adminLoggedIn');
         const loginTime = localStorage.getItem('adminLoginTime');
@@ -298,6 +376,7 @@ class AdminDashboard {
 
     applyFilters() {
         const pageFilter = document.getElementById('pageFilter').value;
+        const sortFilter = document.getElementById('sortFilter').value;
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
         this.filteredCourses = this.courses.filter(course => {
@@ -310,9 +389,41 @@ class AdminDashboard {
             return matchesPage && matchesSearch;
         });
 
+        // Aplicar ordenação
+        this.applySorting(sortFilter);
+
         this.renderCourses();
     }
 
+    applySorting(sortFilter) {
+        const [field, direction] = sortFilter.split('_');
+        
+        this.filteredCourses.sort((a, b) => {
+            let valueA, valueB;
+            
+            switch (field) {
+                case 'title':
+                    valueA = a.title.toLowerCase();
+                    valueB = b.title.toLowerCase();
+                    break;
+                case 'category':
+                    valueA = a.category.toLowerCase();
+                    valueB = b.category.toLowerCase();
+                    break;
+                case 'created':
+                default:
+                    valueA = new Date(a.createdAt || a.id || 0);
+                    valueB = new Date(b.createdAt || b.id || 0);
+                    break;
+            }
+            
+            if (direction === 'asc') {
+                return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+            } else {
+                return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+            }
+        });
+    }
     openCourseModal(course = null) {
         this.currentCourse = course;
         this.isEditing = !!course;
@@ -332,10 +443,31 @@ class AdminDashboard {
             document.getElementById('courseUrl').value = course.courseUrl;
             document.getElementById('downloadUrl').value = course.downloadUrl || '';
             document.getElementById('coursePage').value = course.page;
+            
+            // Configurar texto do botão
+            const buttonText = course.buttonText || 'Inscreva-se';
+            const buttonTextSelect = document.getElementById('buttonTextSelect');
+            const customButtonText = document.getElementById('customButtonText');
+            
+            // Verificar se é um texto personalizado
+            const predefinedOptions = ['Inscreva-se', 'Baixar', 'Saiba mais', 'Começar agora', 'Acessar curso'];
+            if (predefinedOptions.includes(buttonText)) {
+                buttonTextSelect.value = buttonText;
+                customButtonText.style.display = 'none';
+                customButtonText.required = false;
+            } else {
+                buttonTextSelect.value = 'custom';
+                customButtonText.value = buttonText;
+                customButtonText.style.display = 'block';
+                customButtonText.required = true;
+            }
+            
             this.updateImagePreview();
         } else {
             form.reset();
             document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('customButtonText').style.display = 'none';
+            document.getElementById('customButtonText').required = false;
         }
 
         this.showModal('courseModal');
@@ -362,6 +494,13 @@ class AdminDashboard {
             downloadUrl: formData.get('downloadUrl') || null // Salva null se o campo estiver vazio
         };
 
+        // Configurar texto do botão
+        const buttonTextSelect = formData.get('buttonTextSelect');
+        if (buttonTextSelect === 'custom') {
+            courseData.buttonText = formData.get('customButtonText');
+        } else {
+            courseData.buttonText = buttonTextSelect;
+        }
         // Validação dos dados do curso
         if (!this.validateCourseData(courseData)) {
             return;
@@ -427,6 +566,11 @@ class AdminDashboard {
             }
         }
 
+        // Validar texto do botão personalizado
+        if (data.buttonText && data.buttonText.trim() === '') {
+            this.showToast('O texto do botão não pode estar vazio.', 'error');
+            return false;
+        }
         // Validar URLs
         try {
             new URL(data.imageUrl);
