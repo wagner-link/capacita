@@ -456,6 +456,16 @@
         // Configurar eventos após carregamento
         document.addEventListener('DOMContentLoaded', function() {
             setupModalEvents();
+            
+            // Configurar evento para modal de login necessário
+            document.getElementById('cancelLoginBtn').addEventListener('click', function() {
+                hideModal('loginRequiredModal');
+            });
+
+            document.getElementById('goToLoginBtn').addEventListener('click', function() {
+                hideModal('loginRequiredModal');
+                window.location.href = 'entrar.html';
+            });
         });
     </script>
     <script>

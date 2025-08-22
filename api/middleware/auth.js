@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const { kv } = require('@vercel/kv');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'capacita-tg-secret-key-2025';
 const JWT_EXPIRES_IN = '7d';
@@ -15,21 +14,8 @@ const authenticateToken = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Verificar se o usuário ainda existe
-    const users = await kv.get('students') || [];
-    const companies = await kv.get('companies') || [];
-    
-    let user = users.find(u => u.id === decoded.userId);
-    if (!user) {
-      user = companies.find(u => u.id === decoded.userId);
-    }
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Usuário não encontrado' });
-    }
 
-    req.user = user;
+    req.user = { id: decoded.userId, tipo: decoded.userType };
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

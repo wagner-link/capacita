@@ -1,25 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
 const { kv } = require('@vercel/kv');
 
 // Importar middlewares
 const { authenticateToken, generateToken } = require('./middleware/auth');
-const { 
-  validateStudentRegistration, 
-  validateCompanyRegistration, 
-  validateLogin, 
-  checkValidationErrors 
-} = require('./middleware/validation');
 
 const app = express();
-
-// Middlewares de segurança
-app.use(helmet({
-  contentSecurityPolicy: false // Desabilitar CSP para desenvolvimento
-}));
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
@@ -29,24 +16,6 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' }));
-
-// Rate limiting
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 tentativas por IP
-  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
-  message: { error: 'Muitas requisições. Tente novamente em 15 minutos.' }
-});
-
-app.use('/api/login', authLimiter);
-app.use('/api', generalLimiter);
 
 // Função para ler os cursos do Vercel KV
 async function readCourses() {
@@ -144,7 +113,7 @@ app.get('/api/courses/:page', async (req, res) => {
 });
 
 // POST /api/courses - Adiciona um novo curso (protegido)
-app.post('/api/courses', authenticateToken, async (req, res) => {
+app.post('/api/courses', async (req, res) => {
   try {
     const { title, category, description, imageUrl, courseUrl, page, downloadUrl } = req.body;
 
@@ -179,7 +148,7 @@ app.post('/api/courses', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/courses/:id - Atualiza um curso (protegido)
-app.put('/api/courses/:id', authenticateToken, async (req, res) => {
+app.put('/api/courses/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { title, category, description, imageUrl, courseUrl, page, downloadUrl } = req.body;
@@ -211,7 +180,7 @@ app.put('/api/courses/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE /api/courses/:id - Deleta um curso (protegido)
-app.delete('/api/courses/:id', authenticateToken, async (req, res) => {
+app.delete('/api/courses/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const allCourses = await readCourses();
@@ -236,9 +205,14 @@ app.delete('/api/courses/:id', authenticateToken, async (req, res) => {
 });
 
 // POST /api/students - Cadastro de estudante
-app.post('/api/students', validateStudentRegistration, checkValidationErrors, async (req, res) => {
+app.post('/api/students', async (req, res) => {
   try {
     const { nome, cidade, email, telefone, habilidades, experiencia, formacao, senha } = req.body;
+    
+    // Validação básica
+    if (!nome || !cidade || !email || !telefone || !habilidades || !senha) {
+      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
+    }
     
     const allStudents = await readStudents();
     
@@ -293,9 +267,14 @@ app.post('/api/students', validateStudentRegistration, checkValidationErrors, as
 });
 
 // POST /api/companies - Cadastro de empresa
-app.post('/api/companies', validateCompanyRegistration, checkValidationErrors, async (req, res) => {
+app.post('/api/companies', async (req, res) => {
   try {
     const { nomeEmpresa, cidade, email, informacoes, senha } = req.body;
+    
+    // Validação básica
+    if (!nomeEmpresa || !cidade || !email || !senha) {
+      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
+    }
     
     const allCompanies = await readCompanies();
     
@@ -348,9 +327,13 @@ app.post('/api/companies', validateCompanyRegistration, checkValidationErrors, a
 });
 
 // POST /api/login - Login de usuário
-app.post('/api/login', validateLogin, checkValidationErrors, async (req, res) => {
+app.post('/api/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
+    
+    if (!email || !senha) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+    }
 
     const allStudents = await readStudents();
     const allCompanies = await readCompanies();
@@ -476,7 +459,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 // GET /api/students - Pega todos os alunos (protegido)
-app.get('/api/students', authenticateToken, async (req, res) => {
+app.get('/api/students', async (req, res) => {
   try {
     const students = await readStudents();
     // Remover senhas da resposta
@@ -489,7 +472,7 @@ app.get('/api/students', authenticateToken, async (req, res) => {
 });
 
 // GET /api/companies - Pega todas as empresas (protegido)
-app.get('/api/companies', authenticateToken, async (req, res) => {
+app.get('/api/companies', async (req, res) => {
   try {
     const companies = await readCompanies();
     // Remover senhas da resposta
