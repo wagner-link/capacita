@@ -1035,7 +1035,7 @@ footer::before {
 .partners-carousel-track {
     display: flex;
     white-space: nowrap;
-    animation: scroll-left 20s linear infinite;
+    animation: scroll-left 15s linear infinite;
 }
 
 .partners-carousel-track:hover {
@@ -1073,7 +1073,7 @@ footer::before {
         margin: 0 1rem;
     }
     .partners-carousel-track {
-        animation: scroll-left 15s linear infinite;
+        animation: scroll-left 5s linear infinite;
     }
 }
 

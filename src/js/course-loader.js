@@ -104,7 +104,7 @@ class CourseLoader {
     
             // Lógica para determinar o texto e o link do botão
             const isDownload = course.downloadUrl && course.downloadUrl.trim() !== '';
-            const buttonText = isDownload ? 'Baixar' : this.getButtonText(course.courseUrl);
+            const buttonText = course.buttonText || (isDownload ? 'Baixar' : this.getButtonText(course.courseUrl));
             const buttonUrl = isDownload ? course.downloadUrl : course.courseUrl;
             const downloadAttribute = isDownload ? 'download' : ''; // Adiciona o atributo de download
     
@@ -133,11 +133,18 @@ class CourseLoader {
     }
     
     getButtonText(url) {
-    // Determine button text based on URL or default to "Saiba Mais"
-    if (url.includes('download') || url.includes('.pdf') || url.includes('.docx') || url.includes('.xlsx')) {
-    return 'Baixar';
-    }
-    return 'Inscreva-se';
+        if (this.currentPage === 'habitos.html') {
+            // Se for um link de download (PDF, DOCX, etc.), continua como "Baixar"
+            if (url.includes('download') || url.includes('.pdf') || url.includes('.docx') || url.includes('.xlsx')) {
+                return 'Baixar';
+            }
+            return 'Saiba Mais';
+        }
+        
+        if (url.includes('download') || url.includes('.pdf') || url.includes('.docx') || url.includes('.xlsx')) {
+            return 'Baixar';
+        }
+        return 'Inscreva-se';
     }
     
     animateCourseCards() {

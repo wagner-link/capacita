@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const { kv } = require('@vercel/kv');
+const fs = require('fs');
+const path = require('path');
 
 // Importar middlewares
 const { authenticateToken, generateToken } = require('./middleware/auth');
@@ -16,6 +18,9 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' }));
+
+// Arquivos locais para armazenamento (mantido para compatibilidade com o server-local.js)
+const COURSES_FILE = path.join(__dirname, 'courses.json');
 
 // Função para ler os cursos do Vercel KV
 async function readCourses() {
@@ -202,6 +207,30 @@ app.delete('/api/courses/:id', async (req, res) => {
     console.error('Error deleting course:', error);
     res.status(500).json({ error: 'Failed to delete course' });
   }
+});
+
+// PUT /api/courses/reorder - Atualiza a ordem dos cursos (MANTIDO DA MAIN)
+app.put('/api/courses/reorder', async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: 'Ordered IDs must be an array' });
+    }
+    const allCourses = await readCourses();
+    const coursesMap = new Map(allCourses.map(course => [course.id, course]));
+    const reorderedCourses = orderedIds.map(id => coursesMap.get(id)).filter(Boolean);
+    if (reorderedCourses.length !== allCourses.length) {
+         return res.status(400).json({ error: 'Incomplete list of courses provided' });
+    }
+    const success = await writeCourses(reorderedCourses);
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to save reordered courses' });
+    }
+    res.json(reorderedCourses);
+  } catch (error) {
+    console.error('Error reordering courses:', error);
+    res.status(500).json({ error: 'Failed to reorder courses' });
+  }
 });
 
 // POST /api/students - Cadastro de estudante

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Capacita TG Admin</title>
+    <title>Dashboard - Capacita Arapiraca Admin</title>
     <link rel="icon" href="/src/imgs/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
@@ -32,6 +32,10 @@
                 <button class="nav-tab active" data-section="courses">
                     <span class="nav-icon">📚</span>
                     Cursos
+                </button>
+                <button class="nav-tab" data-section="reorder">
+                    <span class="nav-icon">🔄</span>
+                    Ordenar Cursos
                 </button>
                 <button class="nav-tab" data-section="students">
                     <span class="nav-icon">🎓</span>
@@ -68,35 +72,35 @@
                         <p>Total de Cursos</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card clickable-stat" data-area="empreend.html">
                     <div class="stat-icon">🚀</div>
                     <div class="stat-content">
                         <h3 id="empreendCourses">0</h3>
                         <p>Empreendedorismo</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card clickable-stat" data-area="primeiroemprego.html">
                     <div class="stat-icon">💼</div>
                     <div class="stat-content">
                         <h3 id="jobCourses">0</h3>
                         <p>Primeiro Emprego</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card clickable-stat" data-area="financ.html">
                     <div class="stat-icon">💰</div>
                     <div class="stat-content">
                         <h3 id="financeCourses">0</h3>
                         <p>Educação Financeira</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card clickable-stat" data-area="novoemp.html">
                     <div class="stat-icon">👨‍🎓</div>
                     <div class="stat-content">
                         <h3 id="NewjobCourses">0</h3>
                         <p>Novo Emprego</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card clickable-stat" data-area="habitos.html">
                     <div class="stat-icon">🥗</div>
                     <div class="stat-content">
                         <h3 id="habitosCourses">0</h3>
@@ -118,6 +122,14 @@
                             <option value="financ.html">Educação Financeira</option>
                             <option value="habitos.html">Hábitos Saudáveis</option>
                         </select>
+                        <select id="sortFilter" class="filter-select">
+                            <option value="created_desc">Mais recentes</option>
+                            <option value="created_asc">Mais antigos</option>
+                            <option value="title_asc">Título A-Z</option>
+                            <option value="title_desc">Título Z-A</option>
+                            <option value="category_asc">Categoria A-Z</option>
+                            <option value="category_desc">Categoria Z-A</option>
+                        </select>
                         <input type="text" id="searchInput" placeholder="Buscar cursos..." class="search-input">
                     </div>
                 </div>
@@ -137,6 +149,30 @@
                             <!-- Cursos seram carregados aqui -->
                         </tbody>
                     </table>
+                </div>
+
+                <div class="content-section" id="reorderSection">
+                    <div class="dashboard-header">
+                        <h2>Ordenar Cursos</h2>
+                        <button class="btn btn-primary" id="saveOrderBtn">
+                            <span class="btn-icon">💾</span>
+                            Salvar Ordem
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Arraste e Solte para reordenar</h3>
+                        </div>
+                        <ul class="reorder-list" id="reorderList">
+                            </ul>
+                        <div class="loading-state" id="reorderLoadingState" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Carregando cursos...</p>
+                        </div>
+                        <div class="empty-state" id="reorderEmptyState" style="display: none;">
+                            <h3>Nenhum curso encontrado</h3>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="loading-state" id="loadingState">
@@ -346,6 +382,19 @@
                         <input type="url" id="downloadUrl" name="downloadUrl" placeholder="Deixe em branco se não for um download">
                     </div>
 
+                    <div class="form-group">
+                        <label for="buttonText">Texto do Botão</label>
+                        <select id="buttonTextSelect" name="buttonTextSelect">
+                            <option value="Inscreva-se">Inscreva-se</option>
+                            <option value="Baixar">Baixar</option>
+                            <option value="Saiba mais">Saiba mais</option>
+                            <option value="Começar agora">Começar agora</option>
+                            <option value="Acessar curso">Acessar curso</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                        <input type="text" id="customButtonText" name="customButtonText" placeholder="Digite o texto personalizado" style="display: none; margin-top: 0.5rem;">
+                    </div>
+
                     <div class="image-preview" id="imagePreview" style="display: none;">
                         <img id="previewImg" src="" alt="Preview">
                     </div>
@@ -420,6 +469,51 @@
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="closeCompanyDetailsBtn">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes da Área -->
+    <div class="modal-overlay" id="areaDetailsModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 id="areaDetailsTitle">Detalhes da Área</h3>
+                <button class="modal-close" id="closeAreaDetailsModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="area-stats-grid">
+                    <div class="area-stat-item">
+                        <div class="area-stat-icon">📊</div>
+                        <div class="area-stat-content">
+                            <h4 id="areaTotalCourses">0</h4>
+                            <p>Total de Cursos</p>
+                        </div>
+                    </div>
+                    <div class="area-stat-item">
+                        <div class="area-stat-icon">✅</div>
+                        <div class="area-stat-content">
+                            <h4 id="areaActiveCourses">0</h4>
+                            <p>Cursos Ativos</p>
+                        </div>
+                    </div>
+                    <div class="area-stat-item">
+                        <div class="area-stat-icon">📅</div>
+                        <div class="area-stat-content">
+                            <h4 id="areaLastUpdate">-</h4>
+                            <p>Última Atualização</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recent-courses-section">
+                    <h4>Cursos Mais Recentes</h4>
+                    <div id="recentCoursesList" class="recent-courses-list">
+                        <!-- Lista será preenchida dinamicamente -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="closeAreaDetailsBtn">Fechar</button>
             </div>
         </div>
     </div>
