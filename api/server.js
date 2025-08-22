@@ -1,18 +1,56 @@
 const express = require('express');
 const cors = require('cors');
-const { kv } = require('@vercel/kv'); // Importa o cliente do Vercel KV
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const { kv } = require('@vercel/kv');
+
+// Importar middlewares
+const { authenticateToken, generateToken } = require('./middleware/auth');
+const { 
+  validateStudentRegistration, 
+  validateCompanyRegistration, 
+  validateLogin, 
+  checkValidationErrors 
+} = require('./middleware/validation');
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Middlewares de segurança
+app.use(helmet({
+  contentSecurityPolicy: false // Desabilitar CSP para desenvolvimento
+}));
 
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://capacitatg.com.br', 'https://www.capacitatg.com.br']
+    : true,
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 tentativas por IP
+  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por IP
+  message: { error: 'Muitas requisições. Tente novamente em 15 minutos.' }
+});
+
+app.use('/api/login', authLimiter);
+app.use('/api', generalLimiter);
 
 // Função para ler os cursos do Vercel KV
 async function readCourses() {
   try {
-    // Busca os dados da chave 'courses'. Se não existir, retorna um array vazio.
     const courses = await kv.get('courses');
     return courses || [];
   } catch (error) {
@@ -24,7 +62,6 @@ async function readCourses() {
 // Função para escrever os cursos no Vercel KV
 async function writeCourses(coursesData) {
   try {
-    // Salva o array completo de cursos na chave 'courses'
     await kv.set('courses', coursesData);
     return true;
   } catch (error) {
@@ -32,128 +69,6 @@ async function writeCourses(coursesData) {
     return false;
   }
 }
-
-// Função para gerar um ID único
-function generateId() {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-}
-
-
-// GET /api/courses - Pega todos os cursos
-app.get('/api/courses', async (req, res) => {
-  try {
-    const courses = await readCourses();
-    res.json(courses);
-  } catch (error) {
-  {console.error('Error fetching courses:', error);}
-    res.status(500).json({ error: 'Failed to fetch courses' });
-  }
-});
-
-// GET /api/courses/:page - Pega cursos por página
-app.get('/api/courses/:page', async (req, res) => {
-  try {
-    const { page } = req.params;
-    const allCourses = await readCourses();
-    const filteredCourses = allCourses.filter(course => course.page === page);
-    res.json(filteredCourses);
-  } catch (error)
-  {  console.error('Error fetching courses by page:', error);}
-    res.status(500).json({ error: 'Failed to fetch courses' });
-  }
-);
-
-// POST /api/courses - Adiciona um novo curso
-app.post('/api/courses', async (req, res) => {
-  try {
-    const { title, category, description, imageUrl, courseUrl, page, downloadUrl } = req.body;
-
-    if (!title || !category || !description || !imageUrl || !courseUrl || !page) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    const allCourses = await readCourses();
-    const newCourse = {
-      id: generateId(),
-      title,
-      category,
-      description,
-      imageUrl,
-      courseUrl,
-      page,
-      downloadUrl,
-    };
-
-    allCourses.push(newCourse);
-    
-    const success = await writeCourses(allCourses);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to save course' });
-    }
-
-    res.status(201).json(newCourse);
-  } catch (error) {
-    console.error('Error creating course:', error);
-    res.status(500).json({ error: 'Failed to create course' });
-  }
-});
-
-// PUT /api/courses/:id - Atualiza um curso
-app.put('/api/courses/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, category, description, imageUrl, courseUrl, page, downloadUrl } = req.body;
-
-    if (!title || !category || !description || !imageUrl || !courseUrl || !page) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    const allCourses = await readCourses();
-    const courseIndex = allCourses.findIndex(course => course.id === id);
-
-    if (courseIndex === -1) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-
-    const updatedCourse = { id, title, category, description, imageUrl, courseUrl, page, downloadUrl };
-    allCourses[courseIndex] = updatedCourse;
-    
-    const success = await writeCourses(allCourses);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to update course' });
-    }
-
-    res.json(updatedCourse);
-  } catch (error) {
-    console.error('Error updating course:', error);
-    res.status(500).json({ error: 'Failed to update course' });
-  }
-});
-
-// DELETE /api/courses/:id - Deleta um curso
-app.delete('/api/courses/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const allCourses = await readCourses();
-    const courseIndex = allCourses.findIndex(course => course.id === id);
-
-    if (courseIndex === -1) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-
-    const deletedCourse = allCourses.splice(courseIndex, 1)[0];
-    
-    const success = await writeCourses(allCourses);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to delete course' });
-    }
-
-    res.json({ message: 'Course deleted successfully', course: deletedCourse });
-  } catch (error) {
-    console.error('Error deleting course:', error);
-    res.status(500).json({ error: 'Failed to delete course' });
-  }
-});
 
 // Função para ler os alunos/atiradores do Vercel KV
 async function readStudents() {
@@ -199,140 +114,411 @@ async function writeCompanies(companiesData) {
   }
 }
 
-// GET /api/students - Pega todos os alunos/atiradores
-app.post('/api/students', async (req, res) => {
+// Função para gerar um ID único
+function generateId() {
+  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+}
+
+// GET /api/courses - Pega todos os cursos
+app.get('/api/courses', async (req, res) => {
+  try {
+    const courses = await readCourses();
+    res.json(courses);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
+// GET /api/courses/:page - Pega cursos por página
+app.get('/api/courses/:page', async (req, res) => {
+  try {
+    const { page } = req.params;
+    const allCourses = await readCourses();
+    const filteredCourses = allCourses.filter(course => course.page === page);
+    res.json(filteredCourses);
+  } catch (error) {
+    console.error('Error fetching courses by page:', error);
+    res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
+// POST /api/courses - Adiciona um novo curso (protegido)
+app.post('/api/courses', authenticateToken, async (req, res) => {
+  try {
+    const { title, category, description, imageUrl, courseUrl, page, downloadUrl } = req.body;
+
+    if (!title || !category || !description || !imageUrl || !courseUrl || !page) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const allCourses = await readCourses();
+    const newCourse = {
+      id: generateId(),
+      title,
+      category,
+      description,
+      imageUrl,
+      courseUrl,
+      page,
+      downloadUrl,
+    };
+
+    allCourses.push(newCourse);
+    
+    const success = await writeCourses(allCourses);
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to save course' });
+    }
+
+    res.status(201).json(newCourse);
+  } catch (error) {
+    console.error('Error creating course:', error);
+    res.status(500).json({ error: 'Failed to create course' });
+  }
+});
+
+// PUT /api/courses/:id - Atualiza um curso (protegido)
+app.put('/api/courses/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, category, description, imageUrl, courseUrl, page, downloadUrl } = req.body;
+
+    if (!title || !category || !description || !imageUrl || !courseUrl || !page) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const allCourses = await readCourses();
+    const courseIndex = allCourses.findIndex(course => course.id === id);
+
+    if (courseIndex === -1) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const updatedCourse = { id, title, category, description, imageUrl, courseUrl, page, downloadUrl };
+    allCourses[courseIndex] = updatedCourse;
+    
+    const success = await writeCourses(allCourses);
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to update course' });
+    }
+
+    res.json(updatedCourse);
+  } catch (error) {
+    console.error('Error updating course:', error);
+    res.status(500).json({ error: 'Failed to update course' });
+  }
+});
+
+// DELETE /api/courses/:id - Deleta um curso (protegido)
+app.delete('/api/courses/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const allCourses = await readCourses();
+    const courseIndex = allCourses.findIndex(course => course.id === id);
+
+    if (courseIndex === -1) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const deletedCourse = allCourses.splice(courseIndex, 1)[0];
+    
+    const success = await writeCourses(allCourses);
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to delete course' });
+    }
+
+    res.json({ message: 'Course deleted successfully', course: deletedCourse });
+  } catch (error) {
+    console.error('Error deleting course:', error);
+    res.status(500).json({ error: 'Failed to delete course' });
+  }
+});
+
+// POST /api/students - Cadastro de estudante
+app.post('/api/students', validateStudentRegistration, checkValidationErrors, async (req, res) => {
   try {
     const { nome, cidade, email, telefone, habilidades, experiencia, formacao, senha } = req.body;
-    
-    if (!nome || !cidade || !email || !telefone || !habilidades || !senha) {
-      return res.status(400).json({ error: 'Nome, cidade, email, telefone, habilidades e senha são obrigatórios' });
-    }
     
     const allStudents = await readStudents();
     
     // Verificar se email já existe
-    const existingStudent = allStudents.find(student => student.email === email);
+    const existingStudent = allStudents.find(student => student.email.toLowerCase() === email.toLowerCase());
     if (existingStudent) {
-      return res.status(409).json({ error: 'Já existe um aluno cadastrado com este email' });
+      return res.status(409).json({ error: 'Já existe um usuário cadastrado com este email' });
     }
+    
+    // Hash da senha
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(senha, saltRounds);
     
     const newStudent = {
       id: generateId(),
-      nome,
+      nome: nome.trim(),
       cidade,
-      email,
+      email: email.toLowerCase(),
       telefone,
-      habilidades,
-      experiencia: experiencia || '',
-      formacao: formacao || '',
-      senha,
+      habilidades: habilidades.trim(),
+      experiencia: experiencia ? experiencia.trim() : '',
+      formacao: formacao ? formacao.trim() : '',
+      senha: hashedPassword,
       tipo: 'atirador',
-      dataRegistro: new Date().toISOString()
+      tipoUsuario: 'atirador',
+      dataRegistro: new Date().toISOString(),
+      ativo: true
     };
     
     allStudents.push(newStudent);
     
-    // CORREÇÃO: Passando 'allStudents' para a função de escrita
     const success = await writeStudents(allStudents);
     if (!success) {
-      return res.status(500).json({ error: 'Failed to save student' });
+      return res.status(500).json({ error: 'Falha ao salvar dados do estudante' });
     }
     
-    res.status(201).json(newStudent);
+    // Gerar token JWT
+    const token = generateToken(newStudent.id, 'atirador');
+    
+    // Remover senha da resposta
+    const { senha: _, ...studentResponse } = newStudent;
+    
+    res.status(201).json({
+      user: studentResponse,
+      token,
+      message: 'Cadastro realizado com sucesso!'
+    });
   } catch (error) {
     console.error('Error creating student:', error);
-    res.status(500).json({ error: 'Failed to create student' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-// POST /api/companies - Adiciona uma nova empresa
-app.post('/api/companies', async (req, res) => {
+// POST /api/companies - Cadastro de empresa
+app.post('/api/companies', validateCompanyRegistration, checkValidationErrors, async (req, res) => {
   try {
     const { nomeEmpresa, cidade, email, informacoes, senha } = req.body;
-    
-    if (!nomeEmpresa || !cidade || !email || !senha) {
-      return res.status(400).json({ error: 'Nome da empresa, cidade, email e senha são obrigatórios' });
-    }
     
     const allCompanies = await readCompanies();
     
     // Verificar se email já existe
-    const existingCompany = allCompanies.find(company => company.email === email);
+    const existingCompany = allCompanies.find(company => company.email.toLowerCase() === email.toLowerCase());
     if (existingCompany) {
       return res.status(409).json({ error: 'Já existe uma empresa cadastrada com este email' });
     }
     
+    // Hash da senha
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(senha, saltRounds);
+    
     const newCompany = {
       id: generateId(),
-      nomeEmpresa,
+      nomeEmpresa: nomeEmpresa.trim(),
+      nome: nomeEmpresa.trim(), // Alias para compatibilidade
       cidade,
-      email,
-      informacoes: informacoes || '',
-      senha,
+      email: email.toLowerCase(),
+      informacoes: informacoes ? informacoes.trim() : '',
+      senha: hashedPassword,
       tipo: 'empresa',
-      dataRegistro: new Date().toISOString()
+      tipoUsuario: 'empregador',
+      dataRegistro: new Date().toISOString(),
+      ativo: true
     };
     
     allCompanies.push(newCompany);
     
-    // CORREÇÃO: Passando 'allCompanies' para a função de escrita
     const success = await writeCompanies(allCompanies);
     if (!success) {
-      return res.status(500).json({ error: 'Failed to save company' });
+      return res.status(500).json({ error: 'Falha ao salvar dados da empresa' });
     }
     
-    res.status(201).json(newCompany);
+    // Gerar token JWT
+    const token = generateToken(newCompany.id, 'empresa');
+    
+    // Remover senha da resposta
+    const { senha: _, ...companyResponse } = newCompany;
+    
+    res.status(201).json({
+      user: companyResponse,
+      token,
+      message: 'Cadastro realizado com sucesso!'
+    });
   } catch (error) {
     console.error('Error creating company:', error);
-    res.status(500).json({ error: 'Failed to create company' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-app.post('/api/login', async (req, res) => {
+// POST /api/login - Login de usuário
+app.post('/api/login', validateLogin, checkValidationErrors, async (req, res) => {
   try {
     const { email, senha } = req.body;
-
-    if (!email || !senha) {
-      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
-    }
 
     const allStudents = await readStudents();
     const allCompanies = await readCompanies();
 
-    // Procurar por um atirador com as credenciais corretas
-    const student = allStudents.find(s => s.email === email && s.senha === senha);
-    if (student) {
-      // Remover a senha do objeto antes de enviar
-      const { senha, ...studentWithoutPassword } = student;
-      return res.json(studentWithoutPassword);
+    // Procurar por um estudante com o email
+    let user = allStudents.find(s => s.email.toLowerCase() === email.toLowerCase());
+    let userType = 'atirador';
+    
+    // Se não encontrou estudante, procurar empresa
+    if (!user) {
+      user = allCompanies.find(c => c.email.toLowerCase() === email.toLowerCase());
+      userType = 'empresa';
     }
 
-    // Se não for um atirador, procurar por uma empresa
-    const company = allCompanies.find(c => c.email === email && c.senha === senha);
-    if (company) {
-      // Remover a senha do objeto antes de enviar
-      const { senha, ...companyWithoutPassword } = company;
-      return res.json(companyWithoutPassword);
+    if (!user) {
+      return res.status(401).json({ error: 'Email ou senha incorretos' });
     }
 
-    // Se nenhuma correspondência for encontrada
-    res.status(401).json({ error: 'Email ou senha incorretos' });
+    // Verificar se o usuário está ativo
+    if (!user.ativo) {
+      return res.status(401).json({ error: 'Conta desativada. Entre em contato com o suporte.' });
+    }
+
+    // Verificar senha
+    const isPasswordValid = await bcrypt.compare(senha, user.senha);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Email ou senha incorretos' });
+    }
+
+    // Gerar token JWT
+    const token = generateToken(user.id, userType);
+    
+    // Atualizar último login
+    user.ultimoLogin = new Date().toISOString();
+    
+    if (userType === 'atirador') {
+      const studentIndex = allStudents.findIndex(s => s.id === user.id);
+      allStudents[studentIndex] = user;
+      await writeStudents(allStudents);
+    } else {
+      const companyIndex = allCompanies.findIndex(c => c.id === user.id);
+      allCompanies[companyIndex] = user;
+      await writeCompanies(allCompanies);
+    }
+
+    // Remover senha da resposta
+    const { senha: _, ...userResponse } = user;
+    
+    res.json({
+      user: userResponse,
+      token,
+      message: 'Login realizado com sucesso!'
+    });
 
   } catch (error) {
     console.error('Error during login:', error);
-    res.status(500).json({ error: 'Failed to log in' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/profile - Obter perfil do usuário autenticado
+app.get('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    const { senha: _, ...userProfile } = req.user;
+    res.json(userProfile);
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Erro ao buscar perfil' });
+  }
+});
+
+// PUT /api/profile - Atualizar perfil do usuário autenticado
+app.put('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userType = req.user.tipo;
+    const updates = req.body;
+    
+    // Remover campos que não devem ser atualizados
+    delete updates.id;
+    delete updates.senha;
+    delete updates.email;
+    delete updates.tipo;
+    delete updates.tipoUsuario;
+    delete updates.dataRegistro;
+    
+    if (userType === 'atirador') {
+      const allStudents = await readStudents();
+      const studentIndex = allStudents.findIndex(s => s.id === userId);
+      
+      if (studentIndex === -1) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+      
+      allStudents[studentIndex] = { ...allStudents[studentIndex], ...updates };
+      await writeStudents(allStudents);
+      
+      const { senha: _, ...updatedUser } = allStudents[studentIndex];
+      res.json(updatedUser);
+    } else {
+      const allCompanies = await readCompanies();
+      const companyIndex = allCompanies.findIndex(c => c.id === userId);
+      
+      if (companyIndex === -1) {
+        return res.status(404).json({ error: 'Empresa não encontrada' });
+      }
+      
+      allCompanies[companyIndex] = { ...allCompanies[companyIndex], ...updates };
+      await writeCompanies(allCompanies);
+      
+      const { senha: _, ...updatedUser } = allCompanies[companyIndex];
+      res.json(updatedUser);
+    }
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
+// POST /api/logout - Logout (invalidar token no cliente)
+app.post('/api/logout', (req, res) => {
+  res.json({ message: 'Logout realizado com sucesso!' });
+});
+
+// GET /api/students - Pega todos os alunos (protegido)
+app.get('/api/students', authenticateToken, async (req, res) => {
+  try {
+    const students = await readStudents();
+    // Remover senhas da resposta
+    const studentsWithoutPasswords = students.map(({ senha, ...student }) => student);
+    res.json(studentsWithoutPasswords);
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    res.status(500).json({ error: 'Failed to fetch students' });
+  }
+});
+
+// GET /api/companies - Pega todas as empresas (protegido)
+app.get('/api/companies', authenticateToken, async (req, res) => {
+  try {
+    const companies = await readCompanies();
+    // Remover senhas da resposta
+    const companiesWithoutPasswords = companies.map(({ senha, ...company }) => company);
+    res.json(companiesWithoutPasswords);
+  } catch (error) {
+    console.error('Error fetching companies:', error);
+    res.status(500).json({ error: 'Failed to fetch companies' });
   }
 });
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: '2.0.0'
+  });
 });
 
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: 'Erro interno do servidor' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint não encontrado' });
 });
 
 // Exporta o app para a Vercel

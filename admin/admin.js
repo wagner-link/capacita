@@ -527,7 +527,12 @@ class AdminDashboard {
     async loadStudents() {
         try {
             this.showStudentsLoading(true);
-            const response = await fetch(`${this.apiUrl}/students`);
+            const response = await fetch(`${this.apiUrl}/students`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken') || 'admin-token'}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -693,7 +698,12 @@ class AdminDashboard {
     async loadCompanies() {
         try {
             this.showCompaniesLoading(true);
-            const response = await fetch(`${this.apiUrl}/companies`);
+            const response = await fetch(`${this.apiUrl}/companies`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken') || 'admin-token'}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

@@ -348,6 +348,7 @@
 
     <script src="/src/js/main.js"></script>
     <script src="/src/js/header-control.js"></script>
+    <script src="/src/js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Smooth scroll para links internos
@@ -409,11 +410,6 @@
             showModal('successModal');
         }
 
-        // Verificar se usuário já está logado ao carregar a página
-        document.addEventListener('DOMContentLoaded', function() {
-            checkLoggedInUser();
-            setupModalEvents();
-        });
 
         function setupModalEvents() {
             // Fechar modais clicando no overlay
@@ -442,7 +438,9 @@
 
             document.getElementById('confirmLogout').addEventListener('click', function() {
                 hideModal('logoutConfirmModal');
-                performLogout();
+                if (window.authSystem) {
+                    window.authSystem.logout();
+                }
             });
 
             document.getElementById('closeSuccessModal').addEventListener('click', function() {
@@ -455,87 +453,9 @@
             });
         }
 
-        function checkLoggedInUser() {
-            const userData = localStorage.getItem('capacitaTgUser');
-            
-            if (userData) {
-                const user = JSON.parse(userData);
-                updateHeaderButton(user, true);
-            } else {
-                updateHeaderButton(null, false);
-            }
-        }
-
-        function updateHeaderButton(user, isLoggedIn) {
-            const headerLoginBtn = document.getElementById('headerLoginBtn');
-            
-            if (isLoggedIn && user) {
-                headerLoginBtn.innerHTML = `
-                    <div class="user-info-header">
-                        <span class="user-name-header">${user.nome.split(' ')[0]} ${user.nome.split(' ')[1] || ''}</span>
-                        <span class="user-type-header">${user.tipo === 'atirador' ? 'Aluno' : 'Empresa'}</span>
-                    </div>
-                `;
-                headerLoginBtn.classList.add('logged-in');
-            } else {
-                headerLoginBtn.textContent = 'Acessar';
-                headerLoginBtn.classList.remove('logged-in');
-                headerLoginBtn.style.background = '';
-                headerLoginBtn.style.color = '';
-            }
-            
-            // Atualiza o botão de login para mobile também, se existir
-            const mobileLoginBtn = document.getElementById('mobileLoginBtn');
-            if (mobileLoginBtn) {
-                if (isLoggedIn && user) {
-                    mobileLoginBtn.innerHTML = `
-                        <div class="user-info-header">
-                            <span class="user-name-header">${user.nome.split(' ')[0]} ${user.nome.split(' ')[1] || ''}</span>
-                            <span class="user-type-header">${user.tipo === 'atirador' ? 'Aluno' : 'Empresa'}</span>
-                        </div>
-                    `;
-                    mobileLoginBtn.classList.add('logged-in');
-                } else {
-                    mobileLoginBtn.textContent = 'Acessar';
-                    mobileLoginBtn.classList.remove('logged-in');
-                }
-            }
-        }
-
-        function performLogout() {
-            // Remover dados do localStorage
-            localStorage.removeItem('capacitaTgUser');
-            
-            // Restaurar botão do header
-            updateHeaderButton(null, false);
-            
-            showSuccessModal('Logout Realizado', 'Você foi desconectado com sucesso!');
-        }
-
-        // Clique no botão do header - SIMPLIFICADO
-        document.getElementById('headerLoginBtn').addEventListener('click', function() {
-            const userData = localStorage.getItem('capacitaTgUser');
-            if (userData) {
-                // Se estiver logado, mostrar modal com informações do usuário
-                const user = JSON.parse(userData);
-                document.getElementById('modalUserName').textContent = user.nome;
-                document.getElementById('modalUserEmail').textContent = user.email;
-                document.getElementById('modalUserType').textContent = 
-                    user.tipo === 'aluno' ? 'Aluno' : 'Empregador';
-                showModal('userProfileModal');
-            } else {
-                // Se não estiver logado, redirecionar diretamente para entrar.html
-                window.location.href = 'entrar.html';
-            }
-        });
-        document.getElementById('mobileLoginBtn').addEventListener('click', function() {
-            const userData = localStorage.getItem('capacitaTgUser');
-            if (userData) {
-                window.location.href = 'entrar.html';
-            } else {
-                // Se não estiver logado, redirecionar para entrar.html
-                window.location.href = 'entrar.html';
-            }
+        // Configurar eventos após carregamento
+        document.addEventListener('DOMContentLoaded', function() {
+            setupModalEvents();
         });
     </script>
     <script>
