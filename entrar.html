@@ -298,6 +298,20 @@
             gap: 1rem;
         }
 
+        .form-transition-exit {
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .form-transition-enter {
+            opacity: 1;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .form-fade {
+            transition: opacity 0.4s ease-in-out;
+        }
+
         @media (max-width: 768px) {
             .register-container {
                 margin: 1rem;
@@ -713,11 +727,33 @@
                 const loginContent = document.getElementById('loginContent');
 
                 if (registrationContent.style.display !== 'none') {
-                    registrationContent.style.display = 'none';
-                    loginContent.style.display = 'block';
+                    // Fade out do formulário de registro
+                    registrationContent.style.opacity = '0';
+                    
+                    // Esconde o formulário de registro e mostra o de login após a transição
+                    setTimeout(() => {
+                        registrationContent.style.display = 'none';
+                        loginContent.style.display = 'block';
+
+                        // Adiciona a classe para a transição de entrada
+                        loginContent.classList.add('form-fade');
+                        loginContent.style.opacity = '1';
+                    }, 400); // 400ms para corresponder à duração da transição
+                    
                 } else {
-                    registrationContent.style.display = 'block';
-                    loginContent.style.display = 'none';
+                    // Remove a classe de transição do formulário atual para que a próxima animação funcione corretamente
+                    loginContent.classList.remove('form-fade');
+                    loginContent.style.opacity = '0';
+                    
+                    // Esconde o formulário de login e mostra o de registro após a transição
+                    setTimeout(() => {
+                        loginContent.style.display = 'none';
+                        registrationContent.style.display = 'block';
+                        
+                        // Adiciona a classe para a transição de entrada
+                        registrationContent.classList.add('form-fade');
+                        registrationContent.style.opacity = '1';
+                    }, 400); // 400ms para corresponder à duração da transição
                 }
             }
 
