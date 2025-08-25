@@ -6,7 +6,7 @@
     <meta name="description" content="Cadastre-se na plataforma Capacita TG como Atirador ou Empresa e tenha acesso a cursos e talentos.">
     <meta name="keywords" content="cadastro, entrar, registro, atirador, empresa, capacita tg">
     <title>Capacita Arapiraca - Cadastro</title>
-    <link rel="icon" href="/src/imgs/favicon.ico" type="image-x-icon">
+    <link rel="icon" href="/src/imgs/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/src/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=PT+Serif:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -570,14 +570,14 @@
                 <p>Entre com suas credenciais</p>
             </div>
             <div class="modal-content">
-                <form id="loginForm">
+                <form id="loginFormModal">
                     <div class="form-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required placeholder="Digite seu email">
+                        <label for="loginEmailModal">Email</label>
+                        <input type="email" id="loginEmailModal" required placeholder="Digite seu email">
                     </div>
                     <div class="form-group">
-                        <label for="loginPassword">Senha</label>
-                        <input type="password" id="loginPassword" required placeholder="Digite sua senha">
+                        <label for="loginPasswordModal">Senha</label>
+                        <input type="password" id="loginPasswordModal" required placeholder="Digite sua senha">
                     </div>
                     <button type="submit" class="btn btn-primary">Entrar</button>
                 </form>
@@ -697,9 +697,15 @@
                 document.addEventListener('change', this.handleFormChanges.bind(this));
                 document.getElementById('registerForm').addEventListener('submit', this.handleRegistrationSubmit.bind(this));
                 document.getElementById('loginForm').addEventListener('submit', this.handleLoginSubmit.bind(this));
+                document.getElementById('loginFormModal').addEventListener('submit', this.handleLoginSubmit.bind(this));
                 document.getElementById('toggleFormLink').addEventListener('click', this.toggleForms.bind(this));
                 document.getElementById('toggleLoginLink').addEventListener('click', this.toggleForms.bind(this));
-                document.getElementById('closeSuccessModal').addEventListener('click', () => this.hideModal('successModal'));
+                document.getElementById('closeSuccessModal').addEventListener('click', () => {
+                    this.hideModal('successModal');
+                    if (!this.loginAction) {
+                        window.location.href = 'index.html';
+                    }
+                });
                 document.getElementById('closeErrorModal').addEventListener('click', () => this.hideModal('errorModal'));
                 document.getElementById('closeLoginModal').addEventListener('click', () => this.hideModal('loginModal'));
 
@@ -856,6 +862,7 @@
 
             async handleRegistrationSubmit(event) {
                 event.preventDefault();
+                this.loginAction = false;
                 
                 if (!this.validateRegistrationForm()) {
                     return;
@@ -976,9 +983,10 @@
             
             async handleLoginSubmit(event) {
                 event.preventDefault();
+                this.loginAction = true;
                 
-                const email = document.getElementById('loginEmail').value;
-                const senha = document.getElementById('loginPassword').value;
+                const email = document.getElementById('loginEmail').value || document.getElementById('loginEmailModal').value;
+                const senha = document.getElementById('loginPassword').value || document.getElementById('loginPasswordModal').value;
 
                 try {
                     const response = await fetch(`${this.apiUrl}/auth/login`, {
@@ -1041,13 +1049,18 @@
                 const modalInfo = this.buildSuccessModalContent(userData);
                 const userDataDisplay = document.getElementById('userDataDisplay');
                 const successMessage = document.getElementById('successMessage');
+                const successTitle = document.getElementById('successTitle');
 
                 if (userDataDisplay) {
                     userDataDisplay.innerHTML = modalInfo.dataHTML;
                 }
                 if (successMessage) {
-                    successMessage.textContent = modalInfo.message + ' Você será redirecionado em breve.';
+                    successMessage.textContent = modalInfo.message;
                 }
+                if(successTitle){
+                    successTitle.textContent = userData.login ? 'Login Efetuado!' : 'Informações Cadastradas!';
+                }
+
 
                 this.showModal('successModal');
             }
@@ -1069,7 +1082,7 @@
                 `;
 
                 const message = userData.login
-                    ? 'Login realizado com sucesso! Bem-vindo de volta!'
+                    ? 'Login realizado com sucesso! Bem-vindo(a) de volta!'
                     : 'Cadastro realizado com sucesso! Você já está logado no sistema.';
 
                 return { dataHTML, message };
