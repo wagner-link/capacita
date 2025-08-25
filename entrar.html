@@ -360,171 +360,188 @@
         <section class="register-section">
             <div class="container">
                 <div class="register-container" id="formContainer">
-                    <div class="register-header">
-                        <img src="/src/imgs/logo-arp.png" 
-                             alt="Logo Capacita TG">
-                        <h2 id="formTitle">Cadastro de Informações</h2>
-                        <p id="formSubtitle">Preencha seus dados para participar da plataforma Capacita Arapiraca</p>
+                    <div id="registrationContent">
+                        <div class="register-header">
+                            <img src="/src/imgs/logo-arp.png" alt="Logo Capacita TG">
+                            <h2 id="formTitle">Cadastro de Informações</h2>
+                            <p id="formSubtitle">Preencha seus dados para participar da plataforma Capacita Arapiraca</p>
+                        </div>
+                
+                        <form class="register-form" id="registerForm">
+                            <div class="form-group" id="userTypeGroup">
+                                <label>Tipo de Usuário</label>
+                                <div class="user-type-container">
+                                    <div class="user-type-option">
+                                        <input type="radio" id="atirador" name="tipoUsuario" value="atirador" required>
+                                        <label for="atirador" class="user-type-label">Aluno</label>
+                                    </div>
+                                    <div class="user-type-option">
+                                        <input type="radio" id="empregador" name="tipoUsuario" value="empregador" required>
+                                        <label for="empregador" class="user-type-label">Empresa</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="atiradorFields" class="dynamic-fields">
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="nomeAtirador">Nome Completo *</label>
+                                        <input type="text" id="nomeAtirador" name="nome" placeholder="Digite seu nome completo">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cidadeAtirador">Cidade *</label>
+                                        <select id="cidadeAtirador" name="cidade" required>
+                                            <option value="">Selecione sua cidade</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="emailAtirador">E-mail *</label>
+                                        <input type="email" id="emailAtirador" name="email" placeholder="Digite seu e-mail">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="telefoneAtirador">Telefone *</label>
+                                        <input type="tel" id="telefoneAtirador" name="telefone" placeholder="(82) 99999-9999" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="senhaAtirador">Senha *</label>
+                                        <input type="password" id="senhaAtirador" name="senha" placeholder="Mínimo 6 caracteres" minlength="6">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmaSenhaAtirador">Confirmar Senha *</label>
+                                        <input type="password" id="confirmaSenhaAtirador" name="confirmaSenha" placeholder="Confirme sua senha">
+                                    </div>
+                                </div>
+                
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="idadeAtirador">Idade *</label>
+                                        <input type="number" id="idadeAtirador" name="idade" placeholder="Ex: 25" min="16" max="65" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="escolaridadeAtirador">Escolaridade *</label>
+                                        <select id="escolaridadeAtirador" name="escolaridade" required>
+                                            <option value="">Selecione sua escolaridade</option>
+                                            <option value="fundamental-incompleto">Ensino Fundamental Incompleto</option>
+                                            <option value="fundamental-completo">Ensino Fundamental Completo</option>
+                                            <option value="medio-incompleto">Ensino Médio Incompleto</option>
+                                            <option value="medio-completo">Ensino Médio Completo</option>
+                                            <option value="superior-incompleto">Ensino Superior Incompleto</option>
+                                            <option value="superior-completo">Ensino Superior Completo</option>
+                                            <option value="pos-graduacao">Pós-graduação</option>
+                                        </select>
+                                    </div>
+                                </div>
+                
+                                <div class="form-group">
+                                    <label for="habilidadesAtirador">Habilidades *</label>
+                                    <textarea id="habilidadesAtirador" name="habilidades" placeholder="Descreva suas principais habilidades e competências (ex: Liderança, Disciplina, Trabalho em equipe, etc.)"></textarea>
+                                </div>
+                
+                                <div class="form-group">
+                                    <label for="experienciaAtirador">Experiência Profissional</label>
+                                    <textarea id="experienciaAtirador" name="experiencia" placeholder="Descreva sua experiência profissional relevante (empregos anteriores, projetos, etc.)"></textarea>
+                                </div>
+                
+                                <div class="form-group">
+                                    <label for="formacaoAtirador">Formação (Cursos e Certificações)</label>
+                                    <textarea id="formacaoAtirador" name="formacao" placeholder="Liste sua formação acadêmica, cursos técnicos, certificações e treinamentos relevantes"></textarea>
+                                </div>
+                            </div>
+                
+                            <div id="empresaFields" class="dynamic-fields">
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="nomeEmpresa">Nome da Empresa *</label>
+                                        <input type="text" id="nomeEmpresa" name="nomeEmpresa" placeholder="Digite o nome da empresa">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cnpjEmpresa">CNPJ *</label>
+                                        <input type="text" id="cnpjEmpresa" name="cnpj" placeholder="00.000.000/0000-00" required>
+                                    </div>
+                                </div>
+                
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="cidadeEmpresa">Cidade *</label>
+                                        <select id="cidadeEmpresa" name="cidade" required>
+                                            <option value="">Selecione a cidade da empresa</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="telefoneEmpresa">Telefone *</label>
+                                        <input type="tel" id="telefoneEmpresa" name="telefone" placeholder="(82) 99999-9999" required>
+                                    </div>
+                                </div>
+                
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="emailEmpresa">E-mail de Contato *</label>
+                                        <input type="email" id="emailEmpresa" name="email" placeholder="Digite o e-mail de contato da empresa">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="setorEmpresa">Setor de Atuação *</label>
+                                        <select id="setorEmpresa" name="setor" required>
+                                            <option value="">Selecione o setor</option>
+                                            <option value="comercio">Comércio</option>
+                                            <option value="servicos">Serviços</option>
+                                            <option value="industria">Indústria</option>
+                                            <option value="tecnologia">Tecnologia</option>
+                                            <option value="saude">Saúde</option>
+                                            <option value="educacao">Educação</option>
+                                            <option value="outros">Outros</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="two-columns">
+                                    <div class="form-group">
+                                        <label for="senhaEmpresa">Senha *</label>
+                                        <input type="password" id="senhaEmpresa" name="senha" placeholder="Mínimo 6 caracteres" minlength="6">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmaSenhaEmpresa">Confirmar Senha *</label>
+                                        <input type="password" id="confirmaSenhaEmpresa" name="confirmaSenha" placeholder="Confirme sua senha">
+                                    </div>
+                                </div>
+                
+                                <div class="form-group">
+                                    <label for="informacoesEmpresa">Necessidades Específicas</label>
+                                    <textarea id="informacoesEmpresa" name="informacoes" placeholder="Descreva as necessidades específicas da empresa, tipos de profissionais procurados, requisitos especiais e outras informações relevantes"></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Cadastrar Informações</button>
+                        </form>
+                
+                        <div class="register-footer">
+                            <p id="toggleFormText">Já possui uma conta? <a href="#" id="toggleFormLink">Fazer Login</a></p>
+                        </div>
                     </div>
-
-                    <form class="register-form" id="registerForm">
-                        <div class="form-group" id="userTypeGroup">
-                            <label>Tipo de Usuário</label>
-                            <div class="user-type-container">
-                                <div class="user-type-option">
-                                    <input type="radio" id="atirador" name="tipoUsuario" value="atirador" required>
-                                    <label for="atirador" class="user-type-label">
-                                        Aluno
-                                    </label>
-                                </div>
-                                <div class="user-type-option">
-                                    <input type="radio" id="empregador" name="tipoUsuario" value="empregador" required>
-                                    <label for="empregador" class="user-type-label">
-                                        Empresa
-                                    </label>
-                                </div>
-                            </div>
+                    
+                    <div id="loginContent" style="display: none;">
+                        <div class="register-header">
+                            <img src="/src/imgs/logo-arp.png" alt="Logo Capacita TG">
+                            <h2>Fazer Login</h2>
+                            <p>Entre com suas credenciais para acessar a plataforma</p>
                         </div>
-
-                        <div id="atiradorFields" class="dynamic-fields">
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="nomeAtirador">Nome Completo *</label>
-                                    <input type="text" id="nomeAtirador" name="nome" placeholder="Digite seu nome completo">
-                                </div>
-                                <div class="form-group">
-                                    <label for="cidadeAtirador">Cidade *</label>
-                                    <select id="cidadeAtirador" name="cidade" required>
-                                        <option value="">Selecione sua cidade</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="emailAtirador">E-mail *</label>
-                                    <input type="email" id="emailAtirador" name="email" placeholder="Digite seu e-mail">
-                                </div>
-                                <div class="form-group">
-                                    <label for="telefoneAtirador">Telefone *</label>
-                                    <input type="tel" id="telefoneAtirador" name="telefone" placeholder="(82) 99999-9999" required>
-                                </div>
-                            </div>
-                            
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="senhaAtirador">Senha *</label>
-                                    <input type="password" id="senhaAtirador" name="senha" placeholder="Mínimo 6 caracteres" minlength="6">
-                                </div>
-                                <div class="form-group">
-                                    <label for="confirmaSenhaAtirador">Confirmar Senha *</label>
-                                    <input type="password" id="confirmaSenhaAtirador" name="confirmaSenha" placeholder="Confirme sua senha">
-                                </div>
-                            </div>
-
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="idadeAtirador">Idade *</label>
-                                    <input type="number" id="idadeAtirador" name="idade" placeholder="Ex: 25" min="16" max="65" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="escolaridadeAtirador">Escolaridade *</label>
-                                    <select id="escolaridadeAtirador" name="escolaridade" required>
-                                        <option value="">Selecione sua escolaridade</option>
-                                        <option value="fundamental-incompleto">Ensino Fundamental Incompleto</option>
-                                        <option value="fundamental-completo">Ensino Fundamental Completo</option>
-                                        <option value="medio-incompleto">Ensino Médio Incompleto</option>
-                                        <option value="medio-completo">Ensino Médio Completo</option>
-                                        <option value="superior-incompleto">Ensino Superior Incompleto</option>
-                                        <option value="superior-completo">Ensino Superior Completo</option>
-                                        <option value="pos-graduacao">Pós-graduação</option>
-                                    </select>
-                                </div>
-                            </div>
-
+                        <form class="register-form" id="loginForm">
                             <div class="form-group">
-                                <label for="habilidadesAtirador">Habilidades *</label>
-                                <textarea id="habilidadesAtirador" name="habilidades" placeholder="Descreva suas principais habilidades e competências (ex: Liderança, Disciplina, Trabalho em equipe, etc.)"></textarea>
+                                <label for="loginEmail">E-mail</label>
+                                <input type="email" id="loginEmail" required placeholder="Digite seu e-mail">
                             </div>
-
                             <div class="form-group">
-                                <label for="experienciaAtirador">Experiência Profissional</label>
-                                <textarea id="experienciaAtirador" name="experiencia" placeholder="Descreva sua experiência profissional relevante (empregos anteriores, projetos, etc.)"></textarea>
+                                <label for="loginPassword">Senha</label>
+                                <input type="password" id="loginPassword" required placeholder="Digite sua senha">
                             </div>
-
-                            <div class="form-group">
-                                <label for="formacaoAtirador">Formação (Cursos e Certificações)</label>
-                                <textarea id="formacaoAtirador" name="formacao" placeholder="Liste sua formação acadêmica, cursos técnicos, certificações e treinamentos relevantes"></textarea>
-                            </div>
+                            <button type="submit" class="btn btn-primary">Entrar</button>
+                        </form>
+                        <div class="register-footer">
+                            <p>Não tem uma conta? <a href="#" id="toggleLoginLink">Cadastre-se</a></p>
                         </div>
-
-                        <div id="empresaFields" class="dynamic-fields">
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="nomeEmpresa">Nome da Empresa *</label>
-                                    <input type="text" id="nomeEmpresa" name="nomeEmpresa" placeholder="Digite o nome da empresa">
-                                </div>
-                                <div class="form-group">
-                                    <label for="cnpjEmpresa">CNPJ *</label>
-                                    <input type="text" id="cnpjEmpresa" name="cnpj" placeholder="00.000.000/0000-00" required>
-                                </div>
-                            </div>
-
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="cidadeEmpresa">Cidade *</label>
-                                    <select id="cidadeEmpresa" name="cidade" required>
-                                        <option value="">Selecione a cidade da empresa</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="telefoneEmpresa">Telefone *</label>
-                                    <input type="tel" id="telefoneEmpresa" name="telefone" placeholder="(82) 99999-9999" required>
-                                </div>
-                            </div>
-
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="emailEmpresa">E-mail de Contato *</label>
-                                    <input type="email" id="emailEmpresa" name="email" placeholder="Digite o e-mail de contato da empresa">
-                                </div>
-                                <div class="form-group">
-                                    <label for="setorEmpresa">Setor de Atuação *</label>
-                                    <select id="setorEmpresa" name="setor" required>
-                                        <option value="">Selecione o setor</option>
-                                        <option value="comercio">Comércio</option>
-                                        <option value="servicos">Serviços</option>
-                                        <option value="industria">Indústria</option>
-                                        <option value="tecnologia">Tecnologia</option>
-                                        <option value="saude">Saúde</option>
-                                        <option value="educacao">Educação</option>
-                                        <option value="outros">Outros</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="two-columns">
-                                <div class="form-group">
-                                    <label for="senhaEmpresa">Senha *</label>
-                                    <input type="password" id="senhaEmpresa" name="senha" placeholder="Mínimo 6 caracteres" minlength="6">
-                                </div>
-                                <div class="form-group">
-                                    <label for="confirmaSenhaEmpresa">Confirmar Senha *</label>
-                                    <input type="password" id="confirmaSenhaEmpresa" name="confirmaSenha" placeholder="Confirme sua senha">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="informacoesEmpresa">Necessidades Específicas</label>
-                                <textarea id="informacoesEmpresa" name="informacoes" placeholder="Descreva as necessidades específicas da empresa, tipos de profissionais procurados, requisitos especiais e outras informações relevantes"></textarea>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Cadastrar Informações</button>
-                    </form>
-
-                    <div class="register-footer">
-                        <p id="toggleFormText">Já possui uma conta? <a href="#" id="toggleFormLink">Fazer Login</a></p>
                     </div>
                 </div>
             </div>
@@ -667,6 +684,7 @@
                 document.getElementById('registerForm').addEventListener('submit', this.handleRegistrationSubmit.bind(this));
                 document.getElementById('loginForm').addEventListener('submit', this.handleLoginSubmit.bind(this));
                 document.getElementById('toggleFormLink').addEventListener('click', this.toggleForms.bind(this));
+                document.getElementById('toggleLoginLink').addEventListener('click', this.toggleForms.bind(this));
                 document.getElementById('closeSuccessModal').addEventListener('click', () => this.hideModal('successModal'));
                 document.getElementById('closeErrorModal').addEventListener('click', () => this.hideModal('errorModal'));
                 document.getElementById('closeLoginModal').addEventListener('click', () => this.hideModal('loginModal'));
@@ -691,32 +709,18 @@
 
             toggleForms(event) {
                 event.preventDefault();
-                const formContainer = document.getElementById('formContainer');
-                const formTitle = document.getElementById('formTitle');
-                const formSubtitle = document.getElementById('formSubtitle');
-                const registerForm = document.getElementById('registerForm');
-                const userTypeGroup = document.getElementById('userTypeGroup');
-                const toggleFormText = document.getElementById('toggleFormText');
+                const registrationContent = document.getElementById('registrationContent');
+                const loginContent = document.getElementById('loginContent');
 
-                const isRegisterForm = registerForm.style.display !== 'none';
-                
-                if (isRegisterForm) {
-                    registerForm.style.display = 'none';
-                    userTypeGroup.style.display = 'none';
-                    formTitle.textContent = 'Fazer Login';
-                    formSubtitle.textContent = 'Entre com suas credenciais para acessar a plataforma';
-                    toggleFormText.innerHTML = 'Não tem uma conta? <a href="#" id="toggleFormLink">Cadastre-se</a>';
-                    this.showModal('loginModal');
+                if (registrationContent.style.display !== 'none') {
+                    registrationContent.style.display = 'none';
+                    loginContent.style.display = 'block';
                 } else {
-                    this.hideModal('loginModal');
-                    registerForm.style.display = 'flex';
-                    userTypeGroup.style.display = 'flex';
-                    formTitle.textContent = 'Cadastro de Informações';
-                    formSubtitle.textContent = 'Preencha seus dados para participar da plataforma Capacita Arapiraca';
-                    toggleFormText.innerHTML = 'Já possui uma conta? <a href="#" id="toggleFormLink">Fazer Login</a>';
+                    registrationContent.style.display = 'block';
+                    loginContent.style.display = 'none';
                 }
-                this.setupEventListeners();
             }
+
 
             handleFormChanges(event) {
                 const { target } = event;
