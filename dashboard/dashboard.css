@@ -431,6 +431,25 @@
     }
 }
 
+.modal-overlay {
+    padding: 1rem;
+}
+
+/* Ajusta o modal para ter altura máxima e rolagem interna */
+.modal {
+    max-height: 90vh;
+    overflow-y: auto; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* Permite que a área de conteúdo cresça e tenha sua própria rolagem */
+.modal-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 1rem; 
+}
+
 @media (max-width: 480px) {
     .dashboard-main {
         padding: 1rem 0;

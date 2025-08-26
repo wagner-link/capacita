@@ -387,30 +387,45 @@ class DashboardController {
 
     async handleProfileUpdate(e) {
         e.preventDefault();
+        const saveButton = document.getElementById('saveProfileBtn');
         
         try {
             this.showButtonLoading('saveProfileBtn', true);
 
             // Coletar dados do formulário
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const formData = new FormData(form);
             const updateData = {};
-
             for (let [key, value] of formData.entries()) {
-                updateData[key.replace('edit', '').toLowerCase()] = value;
+                const newKey = key.replace('edit', '');
+                updateData[newKey.charAt(0).toLowerCase() + newKey.slice(1)] = value;
             }
 
-            // Simular atualização (implementar endpoint real conforme necessário)
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Enviar dados para a API
+            const response = await fetch(`${this.apiUrl}/users/${this.currentUser.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(updateData),
+            });
+            
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.error || 'Erro ao atualizar perfil.');
+            }
 
             this.hideModal('editProfileModal');
-            this.showSuccessModal('Perfil Atualizado', 'Suas informações foram atualizadas com sucesso!');
+            this.showSuccessModal('Perfil Atualizado', 'Suas informações foram salvas com sucesso!');
             
-            // Recarregar dados do perfil
+            // Recarregar dados do perfil para refletir as mudanças
             await this.loadUserProfile();
 
         } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
-            this.showError('Erro ao atualizar perfil');
+            this.showErrorModal('Erro', error.message || 'Não foi possível atualizar o perfil.');
         } finally {
             this.showButtonLoading('saveProfileBtn', false);
         }

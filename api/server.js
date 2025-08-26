@@ -622,6 +622,61 @@ app.post('/api/companies', async (req, res) => {
   }
 });
 
+// PUT /api/users/:id - Atualiza um usuário (Candidato ou Empresa)
+app.put('/api/users/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Garante que o usuário só pode editar o próprio perfil
+    if (req.user.id !== id) {
+      return res.status(403).json({ error: 'Acesso negado.' });
+    }
+
+    const allUsers = await readUsers();
+    const userIndex = allUsers.findIndex(u => u.id === id);
+
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    // Atualiza os dados principais do usuário
+    const userToUpdate = allUsers[userIndex];
+    Object.assign(userToUpdate, {
+        nome: updateData.nome || updateData.nomeEmpresa || userToUpdate.nome,
+        email: updateData.email || userToUpdate.email,
+        ...updateData
+    });
+    
+    allUsers[userIndex] = userToUpdate;
+    await writeUsers(allUsers);
+
+    // Atualiza a coleção específica (atirador ou empregador)
+    if (userToUpdate.tipoUsuario === 'atirador') {
+        const students = await readStudents();
+        const studentIndex = students.findIndex(s => s.id === id);
+        if (studentIndex !== -1) {
+            Object.assign(students[studentIndex], updateData);
+            await writeStudents(students);
+        }
+    } else if (userToUpdate.tipoUsuario === 'empregador') {
+        const companies = await readCompanies();
+        const companyIndex = companies.findIndex(c => c.id === id);
+        if (companyIndex !== -1) {
+            Object.assign(companies[companyIndex], updateData);
+            await writeCompanies(companies);
+        }
+    }
+    
+    const { senha: _, ...userWithoutPassword } = userToUpdate;
+    res.json({ message: 'Perfil atualizado com sucesso!', user: userWithoutPassword });
+
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor ao atualizar perfil.' });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
