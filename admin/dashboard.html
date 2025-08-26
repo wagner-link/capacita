@@ -326,6 +326,54 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- History Section -->
+            <div class="content-section" id="historySection">
+                <div class="dashboard-header">
+                    <h2>Histórico de Alterações</h2>
+                </div>
+
+                <!-- History Filters -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Registro de Alterações</h3>
+                        <div class="table-filters">
+                            <input type="date" id="historyStartDate" class="filter-select">
+                            <input type="date" id="historyEndDate" class="filter-select">
+                            <select id="historyUserFilter" class="filter-select">
+                                <option value="">Todos os usuários</option>
+                            </select>
+                            <button class="btn btn-secondary" id="filterHistoryBtn">Filtrar</button>
+                        </div>
+                    </div>
+
+                    <table class="admin-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>📅 Data/Hora</th>
+                                <th>👤 Usuário</th>
+                                <th>📝 Campo</th>
+                                <th>📋 Valor Anterior</th>
+                                <th>✏️ Valor Novo</th>
+                                <th>🏷️ Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+
+                    <div class="loading-state" id="historyLoadingState" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Carregando histórico...</p>
+                    </div>
+
+                    <div class="empty-state" id="historyEmptyState" style="display: none;">
+                        <div class="empty-icon">📋</div>
+                        <h3>Nenhuma alteração encontrada</h3>
+                        <p>O histórico de alterações aparecerá aqui.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 

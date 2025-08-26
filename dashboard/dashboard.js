@@ -370,12 +370,24 @@ class DashboardController {
                 const student = students.find(s => s.id === this.currentUser.id) || this.currentUser;
 
                 document.getElementById('editNome').value = student.nome || '';
+                document.getElementById('editSexo').value = student.sexo || '';
                 document.getElementById('editEmail').value = student.email || '';
                 document.getElementById('editTelefone').value = student.telefone || '';
                 document.getElementById('editCidade').value = student.cidade || '';
                 document.getElementById('editHabilidades').value = student.habilidades || '';
                 document.getElementById('editExperiencia').value = student.experiencia || '';
                 document.getElementById('editFormacao').value = student.formacao || '';
+                
+                // Configurar campos militares
+                document.getElementById('editSituacaoMilitar').value = student.situacaoMilitar || '';
+                document.getElementById('editTiroGuerra').value = student.tiroGuerra || '';
+                document.getElementById('editOutroTg').value = student.outroTg || '';
+                document.getElementById('editOutraSituacao').value = student.outraSituacao || '';
+                
+                // Aplicar lógica condicional
+                this.handleEditSexChange(student.sexo || '');
+                this.handleEditSituacaoMilitarChange(student.situacaoMilitar || '');
+                this.handleEditTiroGuerraChange(student.tiroGuerra || '');
             }
 
             this.showModal('editProfileModal');

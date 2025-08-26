@@ -152,15 +152,65 @@
                             <input type="text" id="editNome" required>
                         </div>
                         <div class="form-group">
-                            <label for="editEmail">Email</label>
-                            <input type="email" id="editEmail" required>
+                            <label for="editSexo">Sexo</label>
+                            <select id="editSexo">
+                                <option value="">Selecione</option>
+                                <option value="feminino">Feminino</option>
+                                <option value="masculino">Masculino</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="editEmail">Email</label>
+                            <input type="email" id="editEmail" required>
+                        </div>
+                        <div class="form-group">
                             <label for="editTelefone">Telefone</label>
                             <input type="tel" id="editTelefone">
                         </div>
+                    </div>
+                    
+                    <!-- Campos condicionais para situação militar -->
+                    <div id="editMilitaryFields" class="military-fields" style="display: none;">
+                        <div class="military-title">Informações Militares</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editSituacaoMilitar">Situação Militar</label>
+                                <select id="editSituacaoMilitar">
+                                    <option value="">Selecione</option>
+                                    <option value="alistado-servindo">Alistado, matriculado e servindo</option>
+                                    <option value="reservista">Reservista concluído</option>
+                                    <option value="dispensado">Dispensado de corporação</option>
+                                    <option value="outra">Outra situação</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="editTiroGuerraGroup" style="display: none;">
+                                <label for="editTiroGuerra">Tiro de Guerra</label>
+                                <select id="editTiroGuerra">
+                                    <option value="">Selecione</option>
+                                    <option value="TG 07-015 - Arapiraca">TG 07-015 - Arapiraca</option>
+                                    <option value="59º BI Mtz - Maceió">59º BI Mtz - Maceió</option>
+                                    <option value="TG 07-007 - Palmeira dos Índios">TG 07-007 - Palmeira dos Índios</option>
+                                    <option value="TG 07-008 - Penedo">TG 07-008 - Penedo</option>
+                                    <option value="TG 07-010 - Delmiro Gouveia">TG 07-010 - Delmiro Gouveia</option>
+                                    <option value="TG 07-022 - Teotônio Vilela">TG 07-022 - Teotônio Vilela</option>
+                                    <option value="TG 07-009 - São José da Laje">TG 07-009 - São José da Laje</option>
+                                    <option value="outro">Outro TG</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="editOutroTgGroup" style="display: none;">
+                            <label for="editOutroTg">Especifique o Tiro de Guerra</label>
+                            <input type="text" id="editOutroTg" placeholder="Digite o nome do seu Tiro de Guerra">
+                        </div>
+                        <div class="form-group" id="editOutraSituacaoGroup" style="display: none;">
+                            <label for="editOutraSituacao">Especifique a situação</label>
+                            <input type="text" id="editOutraSituacao" placeholder="Descreva sua situação militar">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
                         <div class="form-group">
                             <label for="editCidade">Cidade</label>
                             <input type="text" id="editCidade">

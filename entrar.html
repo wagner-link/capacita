@@ -298,6 +298,37 @@
             gap: 1rem;
         }
 
+        .military-fields {
+            background: #f0f8ff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #007BFF;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .military-fields.show {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .military-title {
+            color: #007BFF;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
         .form-transition-exit {
             opacity: 0;
             transition: opacity 0.4s ease-in-out;
@@ -564,17 +595,29 @@
     
     <div class="modal-overlay" id="loginModal">
         <div class="modal">
-            <div class="modal-header">
-                <img src="/src/imgs/logo-arp.png" alt="Logo Capacita TG">
                 <h3>Fazer Login</h3>
                 <p>Entre com suas credenciais</p>
             </div>
             <div class="modal-content">
+                </div>
+
+                <div class="two-columns">
                 <form id="loginFormModal">
                     <div class="form-group">
                         <label for="loginEmailModal">Email</label>
                         <input type="email" id="loginEmailModal" required placeholder="Digite seu email">
                     </div>
+                    <div class="form-group">
+                        <label for="sexoAtirador">Sexo *</label>
+                        <select id="sexoAtirador" name="sexo" required>
+                            <option value="">Selecione seu sexo</option>
+                            <option value="feminino">Feminino</option>
+                            <option value="masculino">Masculino</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="two-columns">
                     <div class="form-group">
                         <label for="loginPasswordModal">Senha</label>
                         <input type="password" id="loginPasswordModal" required placeholder="Digite sua senha">
@@ -638,15 +681,134 @@
                         <li><a href="https://web.arapiraca.al.gov.br/tipo-de-arquivo/vagas-do-sine/" class="nav-link" target="_blank">Vagas Sine Arapiraca</a></li>
                         <li><a href="#contato" class="nav-link">Contato</a></li>
                     </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Contato</h4>
                     <p>Email plataforma: capacitaarapiraca0@gmail.com</p>
                     <div class="social-links">
                         <a href="https://www.instagram.com/sine_municipal_de_arapiraca/" target="_blank">Instagram</a>
                     </div>
                 </div>
+                
+                <!-- Campos condicionais para situação militar (apenas masculino) -->
+                <div id="situacaoMilitarFields" class="military-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="situacaoMilitar">Situação Militar *</label>
+                        <select id="situacaoMilitar" name="situacaoMilitar">
+                            <option value="">Selecione sua situação militar</option>
+                            <option value="alistado-servindo">Alistado, matriculado e servindo</option>
+                            <option value="reservista">Reservista concluído</option>
+                            <option value="dispensado">Dispensado de corporação</option>
+                            <option value="outra">Outra situação</option>
+                        </select>
+                    </div>
+                    
+                    <div id="outraSituacaoField" class="form-group" style="display: none;">
+                        <label for="outraSituacao">Especifique a situação *</label>
+                        <input type="text" id="outraSituacao" name="outraSituacao" placeholder="Descreva sua situação militar">
+                    </div>
+                </div>
+                
+                <!-- Campo condicional para Tiro de Guerra (apenas para alistados servindo) -->
+                <div id="tiroGuerraField" class="form-group" style="display: none;">
+                    <label for="tiroGuerra">Tiro de Guerra *</label>
+                    <select id="tiroGuerra" name="tiroGuerra">
+                        <option value="">Selecione seu Tiro de Guerra</option>
+                        <option value="TG 07-015 - Arapiraca">TG 07-015 - Arapiraca</option>
+                        <option value="59º BI Mtz - Maceió">59º BI Mtz - Maceió</option>
+                        <option value="TG 07-007 - Palmeira dos Índios">TG 07-007 - Palmeira dos Índios</option>
+                        <option value="TG 07-008 - Penedo">TG 07-008 - Penedo</option>
+                        <option value="TG 07-010 - Delmiro Gouveia">TG 07-010 - Delmiro Gouveia</option>
+                        <option value="TG 07-022 - Teotônio Vilela">TG 07-022 - Teotônio Vilela</option>
+                </div>
+                
+                <div id="outroTgField" class="form-group" style="display: none;">
+                    <label for="outroTg">Especifique o Tiro de Guerra *</label>
+                </div>
+                
+                <div class="two-columns">
+                    <input type="text" id="outroTg" name="outroTg" placeholder="Digite o nome do seu Tiro de Guerra">
+                </div>
+                
+                <div class="two-columns">
             </div>
+    handleSexChange(event) {
+        const sexo = event.target.value;
+        const situacaoMilitarFields = document.getElementById('situacaoMilitarFields');
+        const situacaoMilitarSelect = document.getElementById('situacaoMilitar');
+        
+        if (sexo === 'masculino') {
+            situacaoMilitarFields.style.display = 'block';
+            situacaoMilitarFields.classList.add('show');
+            situacaoMilitarSelect.setAttribute('required', '');
+        } else {
+            situacaoMilitarFields.style.display = 'none';
+            situacaoMilitarFields.classList.remove('show');
+            situacaoMilitarSelect.removeAttribute('required');
+            situacaoMilitarSelect.value = '';
+            
+            // Hide dependent fields
+            this.hideTiroGuerraFields();
+            this.hideOutraSituacaoField();
+        }
+    }
+
+    handleSituacaoMilitarChange(event) {
+        const situacao = event.target.value;
+        const tiroGuerraField = document.getElementById('tiroGuerraField');
+        const tiroGuerraSelect = document.getElementById('tiroGuerra');
+        const outraSituacaoField = document.getElementById('outraSituacaoField');
+        const outraSituacaoInput = document.getElementById('outraSituacao');
+        
+        // Reset all conditional fields
+        this.hideTiroGuerraFields();
+        this.hideOutraSituacaoField();
+        
+        if (situacao === 'alistado-servindo') {
+            tiroGuerraField.style.display = 'block';
+            tiroGuerraSelect.setAttribute('required', '');
+        } else if (situacao === 'outra') {
+            outraSituacaoField.style.display = 'block';
+            outraSituacaoInput.setAttribute('required', '');
+        }
+    }
+
+    handleTiroGuerraChange(event) {
+        const tiroGuerra = event.target.value;
+        const outroTgField = document.getElementById('outroTgField');
+        const outroTgInput = document.getElementById('outroTg');
+        
+        if (tiroGuerra === 'outro') {
+            outroTgField.style.display = 'block';
+            outroTgInput.setAttribute('required', '');
+        } else {
+            outroTgField.style.display = 'none';
+            outroTgInput.removeAttribute('required');
+            outroTgInput.value = '';
+        }
+    }
+
+    hideTiroGuerraFields() {
+        const tiroGuerraField = document.getElementById('tiroGuerraField');
+        const tiroGuerraSelect = document.getElementById('tiroGuerra');
+        const outroTgField = document.getElementById('outroTgField');
+        const outroTgInput = document.getElementById('outroTg');
+        
+        tiroGuerraField.style.display = 'none';
+        tiroGuerraSelect.removeAttribute('required');
+        tiroGuerraSelect.value = '';
+        
+        outroTgField.style.display = 'none';
+        outroTgInput.removeAttribute('required');
+        outroTgInput.value = '';
+    }
+
+    hideOutraSituacaoField() {
+        const outraSituacaoField = document.getElementById('outraSituacaoField');
+        const outraSituacaoInput = document.getElementById('outraSituacao');
+        
+        outraSituacaoField.style.display = 'none';
+        outraSituacaoInput.removeAttribute('required');
+        outraSituacaoInput.value = '';
+    }
+
             <div class="footer-bottom">
                 <p>&copy; 2024-2025 CapacitaArapiraca. Todos os direitos reservados.</p>
             </div>
@@ -657,6 +819,11 @@
         const CIDADES_TG = Object.freeze({
             'arapiraca': { nome: 'Arapiraca', tg: '07-015' }
         });
+
+        // Handles conditional fields for military situation
+        document.getElementById('sexoAtirador').addEventListener('change', this.handleSexChange.bind(this));
+        document.getElementById('situacaoMilitar').addEventListener('change', this.handleSituacaoMilitarChange.bind(this));
+        document.getElementById('tiroGuerra').addEventListener('change', this.handleTiroGuerraChange.bind(this));
 
         class CapacitaTGManager {
             constructor() {
@@ -923,6 +1090,7 @@
             getAtiradorData() {
                 return {
                     nome: document.getElementById('nomeAtirador').value.trim(),
+                    sexo: document.getElementById('sexoAtirador').value.trim(),
                     email: document.getElementById('emailAtirador').value.trim(),
                     telefone: document.getElementById('telefoneAtirador').value.trim(),
                     idade: document.getElementById('idadeAtirador').value.trim(),
@@ -930,7 +1098,11 @@
                     habilidades: document.getElementById('habilidadesAtirador').value.trim(),
                     experiencia: document.getElementById('experienciaAtirador').value.trim(),
                     formacao: document.getElementById('formacaoAtirador').value.trim(),
-                    senha: document.getElementById('senhaAtirador').value
+                    senha: document.getElementById('senhaAtirador').value,
+                    situacaoMilitar: document.getElementById('situacaoMilitar').value.trim(),
+                    tiroGuerra: document.getElementById('tiroGuerra').value.trim(),
+                    outroTg: document.getElementById('outroTg').value.trim(),
+                    outraSituacao: document.getElementById('outraSituacao').value.trim()
                 };
             }
 

@@ -1070,8 +1070,151 @@ class AdminDashboard {
         `;
         this.showModal('companyModal');
     }
+    
+    // Change History methods
+    async loadChangeHistory() {
+        try {
+            this.showHistoryLoading(true);
+            const response = await fetch(`${this.apiUrl}/change-history`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.changeHistory = data.history;
+            this.filteredHistory = [...this.changeHistory];
+            this.renderChangeHistory();
+            this.populateHistoryUserFilter();
+        } catch (error) {
+            console.error('Error loading change history:', error);
+            this.showToast('Erro ao carregar histórico.', 'error');
+        } finally {
+            this.showHistoryLoading(false);
+        }
+    }
+    
+    showHistoryLoading(show) {
+        const loadingState = document.getElementById('historyLoadingState');
+        const table = document.getElementById('historyTable');
+        
+        if (show) {
+            loadingState.style.display = 'block';
+            table.style.display = 'none';
+        } else {
+            loadingState.style.display = 'none';
+            table.style.display = 'table';
+        }
+    }
+    
+    renderChangeHistory() {
+        const tbody = document.getElementById('historyTableBody');
+        const emptyState = document.getElementById('historyEmptyState');
+        
+        if (this.filteredHistory.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            document.getElementById('historyTable').style.display = 'none';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        document.getElementById('historyTable').style.display = 'table';
 }
 
+        tbody.innerHTML = this.filteredHistory.map(record => {
+            return `
+            <tr>
+                <td>
+                    <div class="date-info">
+                        ${record.date}
+                        <br>
+                        <small>${record.time}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="user-info-small">
+                        <div class="user-id">${record.userId.substring(0, 8)}...</div>
+                        <div class="user-type-small">${record.userType === 'atirador' ? 'Candidato' : 'Empresa'}</div>
+                    </div>
+                </td>
+                <td>
+                    <span class="field-badge">${this.formatFieldName(record.field)}</span>
+                </td>
+                <td>
+                    <div class="value-display old-value">${this.formatValue(record.oldValue)}</div>
+                </td>
+                <td>
+                    <div class="value-display new-value">${this.formatValue(record.newValue)}</div>
+                </td>
+                <td>
+                    <span class="type-badge ${record.userType}">${record.userType === 'atirador' ? 'Candidato' : 'Empresa'}</span>
+                </td>
+            </tr>
+        `;
+        }).join('');
+    }
+    
+    populateHistoryUserFilter() {
+        const userFilter = document.getElementById('historyUserFilter');
+        const uniqueUsers = [...new Set(this.changeHistory.map(record => record.userId))];
+        
+        userFilter.innerHTML = '<option value="">Todos os usuários</option>';
+        uniqueUsers.forEach(userId => {
+            const option = document.createElement('option');
+            option.value = userId;
+            option.textContent = `${userId.substring(0, 8)}...`;
+            userFilter.appendChild(option);
+        });
+    }
+    
+    applyHistoryFilters() {
+        const startDate = document.getElementById('historyStartDate').value;
+        const endDate = document.getElementById('historyEndDate').value;
+        const userFilter = document.getElementById('historyUserFilter').value;
+        
+        this.filteredHistory = this.changeHistory.filter(record => {
+            const recordDate = new Date(record.timestamp);
+            
+            const matchesStartDate = !startDate || recordDate >= new Date(startDate);
+            const matchesEndDate = !endDate || recordDate <= new Date(endDate + 'T23:59:59');
+            const matchesUser = !userFilter || record.userId === userFilter;
+            
+            return matchesStartDate && matchesEndDate && matchesUser;
+        });
+        
+        this.renderChangeHistory();
+    }
+    
+    formatFieldName(field) {
+        const fieldMap = {
+            'nome': 'Nome',
+            'email': 'Email',
+            'telefone': 'Telefone',
+            'cidade': 'Cidade',
+            'habilidades': 'Habilidades',
+            'experiencia': 'Experiência',
+            'formacao': 'Formação',
+            'sexo': 'Sexo',
+            'situacaoMilitar': 'Situação Militar',
+            'tiroGuerra': 'Tiro de Guerra',
+            'outroTg': 'Outro TG',
+            'outraSituacao': 'Outra Situação',
+            'nomeEmpresa': 'Nome da Empresa',
+            'cnpj': 'CNPJ',
+            'setor': 'Setor',
+            'informacoes': 'Informações'
+        };
+        return fieldMap[field] || field;
+    }
+    
+    formatValue(value) {
+        if (!value || value === '') return '<em>Vazio</em>';
+        if (typeof value === 'string' && value.length > 50) {
+            return value.substring(0, 50) + '...';
+        }
+        return this.escapeHtml(value.toString());
+    }
 // Inicializa o dashboard quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     window.adminDashboard = new AdminDashboard();

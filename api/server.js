@@ -123,6 +123,59 @@ async function writeCompanies(companiesData) {
   }
 }
 
+// Função para ler o histórico de alterações do Vercel KV
+async function readChangeHistory() {
+  try {
+    const history = await kv.get('change_history');
+    return history || [];
+  } catch (error) {
+    console.error('Error reading change history from Vercel KV:', error);
+    return [];
+  }
+}
+
+// Função para escrever o histórico de alterações no Vercel KV
+async function writeChangeHistory(historyData) {
+  try {
+    await kv.set('change_history', historyData);
+    return true;
+  } catch (error) {
+    console.error('Error writing change history to Vercel KV:', error);
+    return false;
+  }
+}
+
+// Função para registrar alteração no histórico
+async function logChange(userId, field, oldValue, newValue, userType) {
+  try {
+    const history = await readChangeHistory();
+    const changeRecord = {
+      id: generateId(),
+      userId,
+      userType,
+      field,
+      oldValue,
+      newValue,
+      timestamp: new Date().toISOString(),
+      date: new Date().toLocaleDateString('pt-BR'),
+      time: new Date().toLocaleTimeString('pt-BR')
+    };
+    
+    history.unshift(changeRecord); // Adiciona no início para ordem cronológica
+    
+    // Manter apenas os últimos 1000 registros
+    if (history.length > 1000) {
+      history.splice(1000);
+    }
+    
+    await writeChangeHistory(history);
+    return true;
+  } catch (error) {
+    console.error('Error logging change:', error);
+    return false;
+  }
+}
+
 // Função para gerar um ID único
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -164,7 +217,14 @@ app.post('/api/auth/register', async (req, res) => {
       tipoUsuario,
       ...otherData,
       dataRegistro: new Date().toISOString(),
-      ativo: true
+      ativo: true,
+      // Novos campos
+      sexo: otherData.sexo || null,
+      situacaoMilitar: otherData.situacaoMilitar || null,
+      tiroGuerra: otherData.tiroGuerra || null,
+      outroTg: otherData.outroTg || null,
+      outraSituacao: otherData.outraSituacao || null,
+      ultimaAtualizacao: new Date().toISOString()
     };
 
     // Salvar usuário
@@ -189,6 +249,11 @@ app.post('/api/auth/register', async (req, res) => {
         habilidades: otherData.habilidades || '',
         experiencia: otherData.experiencia || '',
         formacao: otherData.formacao || '',
+        sexo: otherData.sexo || null,
+        situacaoMilitar: otherData.situacaoMilitar || null,
+        tiroGuerra: otherData.tiroGuerra || null,
+        outroTg: otherData.outroTg || null,
+        outraSituacao: otherData.outraSituacao || null,
         tipo: 'atirador',
         dataRegistro: newUser.dataRegistro
       };
@@ -680,6 +745,45 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// GET /api/change-history - Obter histórico de alterações (apenas admin)
+app.get('/api/change-history', async (req, res) => {
+  try {
+    const { page = 1, limit = 50, userId, startDate, endDate } = req.query;
+    
+    let history = await readChangeHistory();
+    
+    // Filtros
+    if (userId) {
+      history = history.filter(record => record.userId === userId);
+    }
+    
+    if (startDate) {
+      const start = new Date(startDate);
+      history = history.filter(record => new Date(record.timestamp) >= start);
+    }
+    
+    if (endDate) {
+      const end = new Date(endDate);
+      history = history.filter(record => new Date(record.timestamp) <= end);
+    }
+    
+    // Paginação
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedHistory = history.slice(startIndex, endIndex);
+    
+    res.json({
+      history: paginatedHistory,
+      total: history.length,
+      page: parseInt(page),
+      totalPages: Math.ceil(history.length / limit)
+    });
+  } catch (error) {
+    console.error('Error fetching change history:', error);
+    res.status(500).json({ error: 'Failed to fetch change history' });
+  }
 });
 
 // Error handling middleware

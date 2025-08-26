@@ -409,6 +409,164 @@ body {
     white-space: nowrap;
     margin-left: 1rem;
 }
+
+/* Military Status Styling */
+.military-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.military-status-badge.atirador {
+    background: linear-gradient(135deg, #2d5016, #4a7c59);
+    color: white;
+}
+
+.military-status-badge.reservista {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.military-status-badge.dispensado {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.military-status-badge.feminino {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.military-status-badge.outra {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* Atirador User Styling */
+.user-info.atirador-user {
+    background: linear-gradient(135deg, #f0f8ff, #e6f7e6);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid #2d5016;
+}
+
+.atirador-badge {
+    background: linear-gradient(135deg, #2d5016, #4a7c59);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+}
+
+.atirador-badge::before {
+    content: "🎖️";
+    font-size: 0.8rem;
+}
+
+.atirador-badge-large {
+    background: linear-gradient(135deg, #2d5016, #4a7c59);
+    color: white;
+    padding: 1rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+}
+
+/* Military Detail Styling */
+.detail-row.military-detail {
+    background: linear-gradient(135deg, #f0f8ff, #e6f7e6);
+    border-left-color: #2d5016;
+}
+
+.detail-value.tg-display {
+    background: #2d5016;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+/* History Table Styling */
+.user-info-small {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.user-id {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: var(--dark-blue-text);
+}
+
+.user-type-small {
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    font-style: italic;
+}
+
+.field-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.value-display {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.value-display.old-value {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.value-display.new-value {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.type-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.type-badge.atirador {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.type-badge.empregador {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
 .reorder-list-item.dragging {
     opacity: 0.5;
 }
