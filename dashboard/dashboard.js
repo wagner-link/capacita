@@ -1,8 +1,11 @@
 // Dashboard Controller
+// Dashboard Controller
 class DashboardController {
     constructor() {
         this.apiUrl = '/api';
         this.currentUser = null;
+        this.autoSaveTimeout = null;
+        this.isAutoSaving = false;
         this.isEmployer = false;
         this.init();
     }
@@ -149,6 +152,10 @@ class DashboardController {
                     <span class="profile-label">Telefone:</span>
                     <span class="profile-value">${company.telefone || 'Não informado'}</span>
                 </div>
+                <div class="profile-item">
+                    <span class="profile-label">Sexo:</span>
+                    <span class="profile-value">${company.sexo ? (company.sexo === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado'}</span>
+                </div>
             </div>
         `;
     }
@@ -156,6 +163,7 @@ class DashboardController {
     buildCandidateProfile(student) {
         return `
             <div class="profile-info">
+                ${student.isAtirador ? '<div class="military-info"><h4>🎖️ Informações Militares</h4><p><strong>Situação:</strong> ' + (student.situacaoMilitar || 'Não informado') + '</p><p><strong>Tiro de Guerra:</strong> ' + (student.tiroGuerra || 'Não informado') + '</p></div>' : ''}
                 <div class="profile-item">
                     <span class="profile-label">Nome:</span>
                     <span class="profile-value">${student.nome}</span>
@@ -179,6 +187,10 @@ class DashboardController {
                 <div class="profile-item">
                     <span class="profile-label">Escolaridade:</span>
                     <span class="profile-value">${student.escolaridade || 'Não informado'}</span>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">Sexo:</span>
+                    <span class="profile-value">${student.sexo ? (student.sexo === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado'}</span>
                 </div>
             </div>
         `;
@@ -231,12 +243,15 @@ class DashboardController {
                 candidatesContent.innerHTML = `
                     <div class="candidates-list">
                         ${students.slice(0, 5).map(student => `
-                            <div class="candidate-item" onclick="dashboardController.showCandidateDetails('${student.id}')">
+                            <div class="candidate-item ${student.isAtirador ? 'atirador-card' : ''}" onclick="dashboardController.showCandidateDetails('${student.id}')">
                                 <div class="candidate-avatar">
                                     ${student.nome.charAt(0).toUpperCase()}
                                 </div>
                                 <div class="candidate-info">
-                                    <div class="candidate-name">${student.nome}</div>
+                                    <div class="candidate-name">
+                                        ${student.nome}
+                                        ${student.isAtirador ? '<span class="atirador-badge">Atirador</span>' : ''}
+                                    </div>
                                     <div class="candidate-skills">${student.habilidades || 'Habilidades não informadas'}</div>
                                     <div class="candidate-city">${student.cidade}</div>
                                 </div>
@@ -271,6 +286,7 @@ class DashboardController {
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);
         }
+        this.setupAutoSave();
     }
 
     setupEventListeners() {
@@ -331,6 +347,125 @@ class DashboardController {
         });
 
         // Botões dos modais de candidato
+    // Auto-save functionality
+    setupAutoSave() {
+        if (!this.isEmployer) {
+            // Setup auto-save for candidate profile fields
+            const autoSaveFields = [
+                'editNome', 'editEmail', 'editTelefone', 'editCidade', 
+                'editHabilidades', 'editExperiencia', 'editFormacao', 'editSexo'
+            ];
+
+            autoSaveFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', () => this.handleAutoSave());
+                    field.addEventListener('change', () => this.handleAutoSave());
+                }
+            });
+        }
+    }
+
+    handleAutoSave() {
+        if (this.isAutoSaving) return;
+
+        // Clear existing timeout
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+        }
+
+        // Set new timeout for auto-save (2 seconds after last change)
+        this.autoSaveTimeout = setTimeout(() => {
+            this.performAutoSave();
+        }, 2000);
+    }
+
+    async performAutoSave() {
+        if (this.isAutoSaving) return;
+
+        this.isAutoSaving = true;
+        this.showAutoSaveIndicator('saving');
+
+        try {
+            const updateData = this.collectProfileData();
+            
+            const response = await fetch(`${this.apiUrl}/users/${this.currentUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(updateData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao salvar automaticamente');
+            }
+
+            this.showAutoSaveIndicator('saved');
+            
+            // Hide indicator after 2 seconds
+            setTimeout(() => {
+                this.hideAutoSaveIndicator();
+            }, 2000);
+
+        } catch (error) {
+            console.error('Erro no auto-save:', error);
+            this.showAutoSaveIndicator('error');
+            
+            setTimeout(() => {
+                this.hideAutoSaveIndicator();
+            }, 3000);
+        } finally {
+            this.isAutoSaving = false;
+        }
+    }
+
+    collectProfileData() {
+        return {
+            nome: document.getElementById('editNome')?.value || '',
+            email: document.getElementById('editEmail')?.value || '',
+            telefone: document.getElementById('editTelefone')?.value || '',
+            cidade: document.getElementById('editCidade')?.value || '',
+            sexo: document.getElementById('editSexo')?.value || '',
+            habilidades: document.getElementById('editHabilidades')?.value || '',
+            experiencia: document.getElementById('editExperiencia')?.value || '',
+            formacao: document.getElementById('editFormacao')?.value || ''
+        };
+    }
+
+    showAutoSaveIndicator(status) {
+        const indicator = document.getElementById('autoSaveIndicator');
+        const statusElement = document.getElementById('saveStatus');
+        
+        if (!indicator || !statusElement) return;
+
+        // Remove all status classes
+        indicator.classList.remove('saving', 'saved', 'error');
+        
+        // Add current status class
+        indicator.classList.add(status);
+        
+        // Update text
+        const statusTexts = {
+            saving: 'Salvando...',
+            saved: 'Salvo automaticamente',
+            error: 'Erro ao salvar'
+        };
+        
+        statusElement.textContent = statusTexts[status] || 'Salvando...';
+        
+        // Show indicator
+        indicator.style.display = 'block';
+    }
+
+    hideAutoSaveIndicator() {
+        const indicator = document.getElementById('autoSaveIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+
         const closeCandidateModal = document.getElementById('closeCandidateModal');
         const closeCandidateDetailsBtn = document.getElementById('closeCandidateDetailsBtn');
         const contactCandidateBtn = document.getElementById('contactCandidateBtn');
@@ -373,9 +508,19 @@ class DashboardController {
                 document.getElementById('editEmail').value = student.email || '';
                 document.getElementById('editTelefone').value = student.telefone || '';
                 document.getElementById('editCidade').value = student.cidade || '';
+                document.getElementById('editSexo').value = student.sexo || '';
                 document.getElementById('editHabilidades').value = student.habilidades || '';
                 document.getElementById('editExperiencia').value = student.experiencia || '';
                 document.getElementById('editFormacao').value = student.formacao || '';
+                
+                // Show military fields if applicable
+                if (student.sexo === 'masculino' && (student.situacaoMilitar || student.tiroGuerra)) {
+                    document.getElementById('militaryFieldsRow').style.display = 'flex';
+                    document.getElementById('editSituacaoMilitar').value = student.situacaoMilitar || '';
+                    document.getElementById('editTiroGuerra').value = student.tiroGuerra || '';
+                } else {
+                    document.getElementById('militaryFieldsRow').style.display = 'none';
+                }
             }
 
             this.showModal('editProfileModal');
@@ -450,6 +595,9 @@ class DashboardController {
                                 <p><strong>Cidade:</strong> ${candidate.cidade}</p>
                                 <p><strong>Idade:</strong> ${candidate.idade || 'Não informado'}</p>
                                 <p><strong>Escolaridade:</strong> ${candidate.escolaridade || 'Não informado'}</p>
+                                <p><strong>Sexo:</strong> ${candidate.sexo ? (candidate.sexo === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado'}</p>
+                                ${candidate.isAtirador ? `<p><strong>Situação Militar:</strong> ${candidate.situacaoMilitar || 'Não informado'}</p>` : ''}
+                                ${candidate.isAtirador ? `<p><strong>Tiro de Guerra:</strong> ${candidate.tiroGuerra || 'Não informado'}</p>` : ''}
                             </div>
                         </div>
                         <div class="detail-section">

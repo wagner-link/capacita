@@ -165,6 +165,23 @@
                             <label for="editCidade">Cidade</label>
                             <input type="text" id="editCidade">
                         </div>
+                        <div class="form-group">
+                            <label for="editSexo">Sexo</label>
+                            <select id="editSexo">
+                                <option value="feminino">Feminino</option>
+                                <option value="masculino">Masculino</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row" id="militaryFieldsRow" style="display: none;">
+                        <div class="form-group">
+                            <label for="editSituacaoMilitar">Situação Militar</label>
+                            <input type="text" id="editSituacaoMilitar" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTiroGuerra">Tiro de Guerra</label>
+                            <input type="text" id="editTiroGuerra" readonly>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="editHabilidades">Habilidades</label>
@@ -189,6 +206,11 @@
                         Salvando...
                     </span>
                 </button>
+            </div>
+            
+            <!-- Indicador de auto-save -->
+            <div class="auto-save-indicator" id="autoSaveIndicator" style="display: none;">
+                <span class="save-status" id="saveStatus">Salvando...</span>
             </div>
         </div>
     </div>

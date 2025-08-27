@@ -430,6 +430,52 @@
                                         <input type="password" id="confirmaSenhaAtirador" name="confirmaSenha" placeholder="Confirme sua senha">
                                     </div>
                                 </div>
+
+                                <div class="form-group">
+                                    <label for="sexoAtirador">Sexo *</label>
+                                    <select id="sexoAtirador" name="sexo" required>
+                                        <option value="">Selecione seu sexo</option>
+                                        <option value="feminino">Feminino</option>
+                                        <option value="masculino">Masculino</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="situacaoMilitarGroup" style="display: none;">
+                                    <label for="situacaoMilitarAtirador">Situação Militar *</label>
+                                    <select id="situacaoMilitarAtirador" name="situacaoMilitar">
+                                        <option value="">Selecione sua situação militar</option>
+                                        <option value="alistado">Alistado</option>
+                                        <option value="matriculado e servindo">Matriculado e servindo</option>
+                                        <option value="reservista concluido">Reservista concluído</option>
+                                        <option value="dispensado">Dispensado de corporação</option>
+                                        <option value="outra">Outra situação</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="outraSituacaoGroup" style="display: none;">
+                                    <label for="outraSituacaoAtirador">Especifique a situação *</label>
+                                    <input type="text" id="outraSituacaoAtirador" name="outraSituacao" placeholder="Descreva sua situação militar">
+                                </div>
+
+                                <div class="form-group" id="tiroGuerraGroup" style="display: none;">
+                                    <label for="tiroGuerraAtirador">Tiro de Guerra *</label>
+                                    <select id="tiroGuerraAtirador" name="tiroGuerra">
+                                        <option value="">Selecione seu Tiro de Guerra</option>
+                                        <option value="TG 07-015 - Arapiraca">TG 07-015 - Arapiraca</option>
+                                        <option value="59º BI Mtz - Maceió">59º BI Mtz - Maceió</option>
+                                        <option value="TG 07-007 - Palmeira dos Índios">TG 07-007 - Palmeira dos Índios</option>
+                                        <option value="TG 07-008 - Penedo">TG 07-008 - Penedo</option>
+                                        <option value="TG 07-010 - Delmiro Gouveia">TG 07-010 - Delmiro Gouveia</option>
+                                        <option value="TG 07-022 - Teotônio Vilela">TG 07-022 - Teotônio Vilela</option>
+                                        <option value="TG 07-009 - São José da Laje">TG 07-009 - São José da Laje</option>
+                                        <option value="outro">Outro TG</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="outroTgGroup" style="display: none;">
+                                    <label for="outroTgAtirador">Especifique o TG *</label>
+                                    <input type="text" id="outroTgAtirador" name="outroTg" placeholder="Digite o nome do seu TG">
+                                </div>
                 
                                 <div class="two-columns">
                                     <div class="form-group">
@@ -490,6 +536,15 @@
                                         <label for="telefoneEmpresa">Telefone *</label>
                                         <input type="tel" id="telefoneEmpresa" name="telefone" placeholder="(82) 99999-9999" required>
                                     </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="sexoEmpresa">Sexo *</label>
+                                    <select id="sexoEmpresa" name="sexo" required>
+                                        <option value="">Selecione seu sexo</option>
+                                        <option value="feminino">Feminino</option>
+                                        <option value="masculino">Masculino</option>
+                                    </select>
                                 </div>
                 
                                 <div class="two-columns">
@@ -665,11 +720,92 @@
                 this.currentUserType = null;
                 this.loginAction = false;
                 this.init();
+                this.setupConditionalFields();
             }
 
             init() {
                 this.setupEventListeners();
                 this.populateCitySelects();
+            }
+
+            setupConditionalFields() {
+                // Listener para campo de sexo do atirador
+                document.getElementById('sexoAtirador').addEventListener('change', (e) => {
+                    this.handleSexoChange(e.target.value, 'atirador');
+                });
+
+                // Listener para situação militar
+                document.getElementById('situacaoMilitarAtirador').addEventListener('change', (e) => {
+                    this.handleSituacaoMilitarChange(e.target.value);
+                });
+
+                // Listener para tiro de guerra
+                document.getElementById('tiroGuerraAtirador').addEventListener('change', (e) => {
+                    this.handleTiroGuerraChange(e.target.value);
+                });
+            }
+
+            handleSexoChange(sexo, tipo) {
+                const situacaoGroup = document.getElementById('situacaoMilitarGroup');
+                const situacaoSelect = document.getElementById('situacaoMilitarAtirador');
+                
+                if (tipo === 'atirador' && sexo === 'masculino') {
+                    situacaoGroup.style.display = 'block';
+                    situacaoSelect.setAttribute('required', '');
+                } else {
+                    situacaoGroup.style.display = 'none';
+                    situacaoSelect.removeAttribute('required');
+                    situacaoSelect.value = '';
+                    
+                    // Esconder campos dependentes
+                    this.hideConditionalFields();
+                }
+            }
+
+            handleSituacaoMilitarChange(situacao) {
+                const tiroGuerraGroup = document.getElementById('tiroGuerraGroup');
+                const tiroGuerraSelect = document.getElementById('tiroGuerraAtirador');
+                const outraSituacaoGroup = document.getElementById('outraSituacaoGroup');
+                const outraSituacaoInput = document.getElementById('outraSituacaoAtirador');
+                
+                // Reset campos
+                this.hideConditionalFields();
+                
+                if (situacao === 'matriculado e servindo') {
+                    tiroGuerraGroup.style.display = 'block';
+                    tiroGuerraSelect.setAttribute('required', '');
+                } else if (situacao === 'outra') {
+                    outraSituacaoGroup.style.display = 'block';
+                    outraSituacaoInput.setAttribute('required', '');
+                }
+            }
+
+            handleTiroGuerraChange(tiroGuerra) {
+                const outroTgGroup = document.getElementById('outroTgGroup');
+                const outroTgInput = document.getElementById('outroTgAtirador');
+                
+                if (tiroGuerra === 'outro') {
+                    outroTgGroup.style.display = 'block';
+                    outroTgInput.setAttribute('required', '');
+                } else {
+                    outroTgGroup.style.display = 'none';
+                    outroTgInput.removeAttribute('required');
+                    outroTgInput.value = '';
+                }
+            }
+
+            hideConditionalFields() {
+                ['tiroGuerraGroup', 'outroTgGroup', 'outraSituacaoGroup'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.style.display = 'none';
+                        const input = element.querySelector('input, select');
+                        if (input) {
+                            input.removeAttribute('required');
+                            input.value = '';
+                        }
+                    }
+                });
             }
 
             populateCitySelects() {
@@ -846,8 +982,8 @@
                     });
 
                 const requiredFields = {
-                    'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'idadeAtirador', 'escolaridadeAtirador', 'habilidadesAtirador', 'senhaAtirador', 'confirmaSenhaAtirador'],
-                    'empregador': ['nomeEmpresa', 'cnpjEmpresa', 'cidadeEmpresa', 'telefoneEmpresa', 'emailEmpresa', 'setorEmpresa', 'senhaEmpresa', 'confirmaSenhaEmpresa']
+                    'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'idadeAtirador', 'escolaridadeAtirador', 'habilidadesAtirador', 'senhaAtirador', 'confirmaSenhaAtirador', 'sexoAtirador'],
+                    'empregador': ['nomeEmpresa', 'cnpjEmpresa', 'cidadeEmpresa', 'telefoneEmpresa', 'emailEmpresa', 'setorEmpresa', 'senhaEmpresa', 'confirmaSenhaEmpresa', 'sexoEmpresa']
                 };
 
                 requiredFields[userType]?.forEach(fieldId => {
@@ -859,6 +995,17 @@
                         }
                     }
                 });
+
+                // Verificar campos condicionais
+                if (userType === 'atirador') {
+                    const sexo = document.getElementById('sexoAtirador').value;
+                    const situacao = document.getElementById('situacaoMilitarAtirador').value;
+                    const tiroGuerra = document.getElementById('tiroGuerraAtirador').value;
+                    
+                    this.handleSexoChange(sexo, 'atirador');
+                    this.handleSituacaoMilitarChange(situacao);
+                    this.handleTiroGuerraChange(tiroGuerra);
+                }
             }
 
             async handleRegistrationSubmit(event) {
@@ -901,6 +1048,22 @@
                     return false;
                 }
 
+                // Validações condicionais
+                if (userType === 'atirador') {
+                    const sexo = document.getElementById('sexoAtirador').value;
+                    if (sexo === 'masculino') {
+                        const situacao = document.getElementById('situacaoMilitarAtirador').value;
+                        if (!situacao) {
+                            this.showErrorMessage('Por favor, selecione sua situação militar.');
+                            return false;
+                        }
+                        if (situacao === 'matriculado e servindo' && !document.getElementById('tiroGuerraAtirador').value) {
+                            this.showErrorMessage('Por favor, selecione seu Tiro de Guerra.');
+                            return false;
+                        }
+                    }
+                }
+
                 return true;
             }
 
@@ -924,6 +1087,9 @@
                 return {
                     nome: document.getElementById('nomeAtirador').value.trim(),
                     email: document.getElementById('emailAtirador').value.trim(),
+                    sexo: document.getElementById('sexoAtirador').value.trim(),
+                    situacaoMilitar: this.getSituacaoMilitar(),
+                    tiroGuerra: this.getTiroGuerra(),
                     telefone: document.getElementById('telefoneAtirador').value.trim(),
                     idade: document.getElementById('idadeAtirador').value.trim(),
                     escolaridade: document.getElementById('escolaridadeAtirador').value.trim(),
@@ -934,9 +1100,32 @@
                 };
             }
 
+            getSituacaoMilitar() {
+                const sexo = document.getElementById('sexoAtirador').value;
+                if (sexo !== 'masculino') return null;
+                
+                const situacao = document.getElementById('situacaoMilitarAtirador').value;
+                if (situacao === 'outra') {
+                    return document.getElementById('outraSituacaoAtirador').value.trim();
+                }
+                return situacao;
+            }
+
+            getTiroGuerra() {
+                const situacao = document.getElementById('situacaoMilitarAtirador').value;
+                if (situacao !== 'matriculado e servindo') return null;
+                
+                const tiroGuerra = document.getElementById('tiroGuerraAtirador').value;
+                if (tiroGuerra === 'outro') {
+                    return document.getElementById('outroTgAtirador').value.trim();
+                }
+                return tiroGuerra;
+            }
+
             getEmpresaData() {
                 return {
                     nomeEmpresa: document.getElementById('nomeEmpresa').value.trim(),
+                    sexo: document.getElementById('sexoEmpresa').value.trim(),
                     cnpj: document.getElementById('cnpjEmpresa').value.trim(),
                     telefone: document.getElementById('telefoneEmpresa').value.trim(),
                     email: document.getElementById('emailEmpresa').value.trim(),
