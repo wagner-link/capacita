@@ -45,6 +45,10 @@
                     <span class="nav-icon">🏢</span>
                     Empresas
                 </button>
+                <button class="nav-tab" data-section="history">
+                    <span class="nav-icon">📋</span>
+                    Histórico
+                </button>
             </div>
         </div>
     </nav>
@@ -235,8 +239,10 @@
                             <tr>
                                 <th>👤 Aluno</th>
                                 <th>🏙️ Cidade</th>
+                                <th>👫 Sexo</th>
                                 <th>📱 Telefone</th>
                                 <th>📅 Cadastro</th>
+                                <th>🎖️ Situação Militar</th>
                                 <th>⚡ Status</th>
                                 <th>🔧 Ações</th>
                             </tr>
@@ -305,6 +311,7 @@
                             <tr>
                                 <th>🏢 Empresa</th>
                                 <th>🏙️ Cidade</th>
+                                <th>👫 Sexo</th>
                                 <th>📅 Cadastro</th>
                                 <th>⚡ Status</th>
                                 <th>🔧 Ações</th>
@@ -324,6 +331,49 @@
                         <h3>Nenhuma empresa encontrada</h3>
                         <p>As empresas cadastradas aparecerão aqui.</p>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="content-section" id="historySection">
+            <div class="dashboard-header">
+                <h2>Histórico de Alterações</h2>
+            </div>
+
+            <!-- History Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Registro de Alterações</h3>
+                    <div class="table-filters">
+                        <input type="text" id="historyUserFilter" placeholder="Filtrar por usuário..." class="search-input">
+                        <input type="date" id="historyDateFilter" class="filter-select">
+                        <input type="text" id="historySearchInput" placeholder="Buscar alterações..." class="search-input">
+                    </div>
+                </div>
+
+                <table class="admin-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>📅 Data/Hora</th>
+                            <th>👤 Usuário</th>
+                            <th>📝 Alterações</th>
+                            <th>👨‍💼 Alterado por</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                    </tbody>
+                </table>
+
+                <div class="loading-state" id="historyLoadingState" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Carregando histórico...</p>
+                </div>
+
+                <div class="empty-state" id="historyEmptyState" style="display: none;">
+                    <div class="empty-icon">📋</div>
+                    <h3>Nenhuma alteração encontrada</h3>
+                    <p>O histórico de alterações aparecerá aqui.</p>
                 </div>
             </div>
         </div>

@@ -9,6 +9,8 @@ class AdminDashboard {
         this.filteredStudents = [];
         this.companies = [];
         this.filteredCompanies = [];
+        this.changeHistory = [];
+        this.filteredHistory = [];
         this.currentSection = 'courses';
         
         this.init();
@@ -25,6 +27,7 @@ class AdminDashboard {
         this.loadCourses();
         this.loadStudents();
         this.loadCompanies();
+        this.loadChangeHistory();
     }
 
     setupEventListeners() {
@@ -95,6 +98,11 @@ class AdminDashboard {
         // Area details modal
         document.getElementById('closeAreaDetailsModal')?.addEventListener('click', () => this.hideModal('areaDetailsModal'));
         document.getElementById('closeAreaDetailsBtn')?.addEventListener('click', () => this.hideModal('areaDetailsModal'));
+
+        // History filters
+        document.getElementById('historyUserFilter')?.addEventListener('change', this.applyHistoryFilters.bind(this));
+        document.getElementById('historyDateFilter')?.addEventListener('change', this.applyHistoryFilters.bind(this));
+        document.getElementById('historySearchInput')?.addEventListener('input', this.applyHistoryFilters.bind(this));
 
         // Close modals on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -750,6 +758,8 @@ class AdminDashboard {
         });
         if (section === 'reorder') {
             this.renderReorderList();
+        } else if (section === 'history') {
+            this.loadChangeHistory();
         }
     }
 
@@ -812,11 +822,15 @@ class AdminDashboard {
                 <td>
                     <div class="user-info">
                         <div class="user-name">${this.escapeHtml(student.nome)}</div>
+                        ${student.isAtirador ? '<span class="atirador-badge">Atirador</span>' : ''}
                         <div class="user-email">${this.escapeHtml(student.email)}</div>
                     </div>
                 </td>
                 <td>
                     <span class="city-badge">${this.escapeHtml(student.cidade)}</span>
+                </td>
+                <td>
+                    <div class="phone-info">${this.escapeHtml(student.sexo === 'masculino' ? 'Masculino' : 'Feminino')}</div>
                 </td>
                 <td>
                     <div class="phone-info">${this.escapeHtml(student.telefone || 'Não informado')}</div>
@@ -826,6 +840,12 @@ class AdminDashboard {
                         ${registrationDate.toLocaleDateString('pt-BR')}
                         <br>
                         <small>${registrationDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="military-info-cell">
+                        ${student.situacaoMilitar ? `<div class="situation-badge">${student.situacaoMilitar}</div>` : '<span class="no-info">N/A</span>'}
+                        ${student.tiroGuerra ? `<div class="tg-info">${student.tiroGuerra}</div>` : ''}
                     </div>
                 </td>
                 <td>
@@ -913,6 +933,22 @@ class AdminDashboard {
                 <div class="detail-value multiline">${this.escapeHtml(student.formacao || 'Não informado')}</div>
             </div>
             <div class="detail-row">
+                <div class="detail-label">Sexo</div>
+                <div class="detail-value">${student.sexo === 'masculino' ? 'Masculino' : 'Feminino'}</div>
+            </div>
+            ${student.situacaoMilitar ? `
+            <div class="detail-row">
+                <div class="detail-label">Situação Militar</div>
+                <div class="detail-value">${this.escapeHtml(student.situacaoMilitar)}</div>
+            </div>
+            ` : ''}
+            ${student.tiroGuerra ? `
+            <div class="detail-row">
+                <div class="detail-label">Tiro de Guerra</div>
+                <div class="detail-value">${this.escapeHtml(student.tiroGuerra)}</div>
+            </div>
+            ` : ''}
+            <div class="detail-row">
                 <div class="detail-label">Data de Registro</div>
                 <div class="detail-value">${new Date(student.dataRegistro).toLocaleString('pt-BR')}</div>
             </div>
@@ -980,6 +1016,9 @@ class AdminDashboard {
                         <div class="company-name">${this.escapeHtml(company.nomeEmpresa)}</div>
                         <div class="company-email">${this.escapeHtml(company.email)}</div>
                     </div>
+                </td>
+                <td>
+                    <div class="phone-info">${company.sexo === 'masculino' ? 'Masculino' : 'Feminino'}</div>
                 </td>
                 <td>
                     <span class="city-badge">${this.escapeHtml(company.cidade)}</span>
@@ -1060,6 +1099,10 @@ class AdminDashboard {
                 <div class="detail-value">${this.escapeHtml(company.email)}</div>
             </div>
             <div class="detail-row">
+                <div class="detail-label">Sexo</div>
+                <div class="detail-value">${company.sexo === 'masculino' ? 'Masculino' : 'Feminino'}</div>
+            </div>
+            <div class="detail-row">
                 <div class="detail-label">Necessidades/Informações</div>
                 <div class="detail-value multiline">${this.escapeHtml(company.informacoes || 'Não informado')}</div>
             </div>
@@ -1069,6 +1112,90 @@ class AdminDashboard {
             </div>
         `;
         this.showModal('companyModal');
+    }
+
+    // Change History methods
+    async loadChangeHistory() {
+        try {
+            const response = await fetch(`${this.apiUrl}/change-history`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            this.changeHistory = await response.json();
+            this.filteredHistory = [...this.changeHistory];
+            this.renderChangeHistory();
+        } catch (error) {
+            console.error('Error loading change history:', error);
+        }
+    }
+
+    renderChangeHistory() {
+        const tbody = document.getElementById('historyTableBody');
+        const emptyState = document.getElementById('historyEmptyState');
+        
+        if (!tbody) return; // History tab might not be implemented yet
+        
+        if (this.filteredHistory.length === 0) {
+            tbody.innerHTML = '';
+            if (emptyState) emptyState.style.display = 'block';
+            return;
+        }
+
+        if (emptyState) emptyState.style.display = 'none';
+
+        tbody.innerHTML = this.filteredHistory.map(record => `
+            <tr>
+                <td>
+                    <div class="date-info">
+                        ${new Date(record.timestamp).toLocaleDateString('pt-BR')}
+                        <br>
+                        <small>${new Date(record.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="user-info">
+                        <div class="user-name">${record.userId}</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="changes-summary">
+                        ${Object.keys(record.changes).map(field => `
+                            <div class="change-item">
+                                <strong>${field}:</strong> 
+                                <span class="old-value">${record.changes[field].old || 'vazio'}</span> 
+                                → 
+                                <span class="new-value">${record.changes[field].new || 'vazio'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </td>
+                <td>
+                    <div class="user-info">
+                        <div class="user-name">${record.changedBy}</div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    applyHistoryFilters() {
+        const userFilter = document.getElementById('historyUserFilter')?.value || '';
+        const dateFilter = document.getElementById('historyDateFilter')?.value || '';
+        const searchTerm = document.getElementById('historySearchInput')?.value.toLowerCase() || '';
+
+        this.filteredHistory = this.changeHistory.filter(record => {
+            const matchesUser = !userFilter || record.userId.includes(userFilter);
+            const matchesDate = !dateFilter || record.timestamp.startsWith(dateFilter);
+            const matchesSearch = !searchTerm || 
+                JSON.stringify(record.changes).toLowerCase().includes(searchTerm) ||
+                record.userId.toLowerCase().includes(searchTerm);
+
+            return matchesUser && matchesDate && matchesSearch;
+        });
+
+        this.renderChangeHistory();
     }
 }
 
