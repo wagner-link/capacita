@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { kv } = require('@vercel/kv');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -123,9 +124,36 @@ async function writeCompanies(companiesData) {
   }
 }
 
+// Função para ler o histórico de alterações
+async function readChangeHistory() {
+  try {
+    const history = await kv.get('change_history');
+    return history || [];
+  } catch (error) {
+    console.error('Error reading change history from Vercel KV:', error);
+    return [];
+  }
+}
+
+// Função para escrever no histórico de alterações
+async function writeChangeHistory(historyData) {
+  try {
+    await kv.set('change_history', historyData);
+    return true;
+  } catch (error) {
+    console.error('Error writing change history to Vercel KV:', error);
+    return false;
+  }
+}
+
 // Função para gerar um ID único
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+}
+
+// Função para gerar ID de alteração
+function generateChangeId() {
+  return crypto.randomBytes(16).toString('hex');
 }
 
 // ===== ROTAS DE AUTENTICAÇÃO =====
@@ -136,12 +164,17 @@ app.post('/api/auth/register', async (req, res) => {
     const { nome, email, senha, tipoUsuario, ...otherData } = req.body;
 
     // Validação básica
-    if (!nome || !email || !senha || !tipoUsuario) {
+    if (!nome || !email || !senha || !tipoUsuario || !otherData.sexo) {
       return res.status(400).json({ error: 'Nome, email, senha e tipo de usuário são obrigatórios' });
     }
 
     if (senha.length < 6) {
       return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' });
+    }
+
+    // Validação do campo sexo
+    if (!['masculino', 'feminino'].includes(otherData.sexo)) {
+      return res.status(400).json({ error: 'Sexo deve ser masculino ou feminino' });
     }
 
     // Verificar se o email já existe
@@ -164,6 +197,8 @@ app.post('/api/auth/register', async (req, res) => {
       tipoUsuario,
       ...otherData,
       dataRegistro: new Date().toISOString(),
+      ultimaAtualizacao: new Date().toISOString(),
+      isAtirador: checkIfAtirador(otherData),
       ativo: true
     };
 
@@ -181,6 +216,10 @@ app.post('/api/auth/register', async (req, res) => {
       const studentData = {
         id: newUser.id,
         nome,
+        sexo: otherData.sexo,
+        situacaoMilitar: otherData.situacaoMilitar || null,
+        tiroGuerra: otherData.tiroGuerra || null,
+        isAtirador: checkIfAtirador(otherData),
         cidade: otherData.cidade || '',
         email: email.toLowerCase(),
         telefone: otherData.telefone || '',
@@ -189,7 +228,8 @@ app.post('/api/auth/register', async (req, res) => {
         habilidades: otherData.habilidades || '',
         experiencia: otherData.experiencia || '',
         formacao: otherData.formacao || '',
-        tipo: 'atirador',
+        tipo: 'candidato',
+        ultimaAtualizacao: new Date().toISOString(),
         dataRegistro: newUser.dataRegistro
       };
       students.push(studentData);
@@ -199,6 +239,8 @@ app.post('/api/auth/register', async (req, res) => {
       const companyData = {
         id: newUser.id,
         nomeEmpresa: otherData.nomeEmpresa || nome,
+        sexo: otherData.sexo,
+        ultimaAtualizacao: new Date().toISOString(),
         cnpj: otherData.cnpj || '',
         cidade: otherData.cidade || '',
         telefone: otherData.telefone || '',
@@ -246,6 +288,15 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+// Função para verificar se é atirador
+function checkIfAtirador(userData) {
+  return userData.sexo === 'masculino' && 
+         userData.situacaoMilitar === 'matriculado e servindo' &&
+         userData.tiroGuerra && 
+         userData.tiroGuerra !== '' &&
+         userData.tiroGuerra !== 'Outro TG';
+}
 
 // POST /api/auth/login - Login de usuário
 app.post('/api/auth/login', async (req, res) => {
@@ -393,6 +444,7 @@ app.post('/api/courses', async (req, res) => {
       downloadUrl,
       buttonText: req.body.buttonText || 'Inscreva-se',
       createdAt: new Date().toISOString(),
+      ultimaAtualizacao: new Date().toISOString(),
     };
 
     allCourses.push(newCourse);
@@ -437,7 +489,8 @@ app.put('/api/courses/:id', async (req, res) => {
       page, 
       downloadUrl,
       buttonText: req.body.buttonText || allCourses[courseIndex].buttonText || 'Inscreva-se',
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      ultimaAtualizacao: new Date().toISOString(),
     };
     allCourses[courseIndex] = updatedCourse;
     
@@ -525,7 +578,7 @@ app.post('/api/students', async (req, res) => {
   try {
     const { nome, cidade, email, telefone, idade, escolaridade, habilidades, experiencia, formacao } = req.body;
 
-    if (!nome || !cidade || !email || !telefone || !idade || !escolaridade || !habilidades) {
+    if (!nome || !cidade || !email || !telefone || !idade || !escolaridade || !habilidades || !req.body.sexo) {
       return res.status(400).json({ error: 'Nome, cidade, email, telefone, idade, escolaridade e habilidades são obrigatórios' });
     }
 
@@ -538,6 +591,10 @@ app.post('/api/students', async (req, res) => {
     const newStudent = {
       id: generateId(),
       nome,
+      sexo: req.body.sexo,
+      situacaoMilitar: req.body.situacaoMilitar || null,
+      tiroGuerra: req.body.tiroGuerra || null,
+      isAtirador: checkIfAtirador(req.body),
       cidade,
       email,
       telefone,
@@ -546,8 +603,9 @@ app.post('/api/students', async (req, res) => {
       habilidades,
       experiencia: experiencia || '',
       formacao: formacao || '',
-      tipo: 'atirador',
-      dataRegistro: new Date().toISOString()
+      tipo: 'candidato',
+      dataRegistro: new Date().toISOString(),
+      ultimaAtualizacao: new Date().toISOString()
     };
 
     allStudents.push(newStudent);
@@ -580,7 +638,7 @@ app.post('/api/companies', async (req, res) => {
   try {
     const { nomeEmpresa, cnpj, cidade, telefone, email, setor, informacoes } = req.body;
 
-    if (!nomeEmpresa || !cnpj || !cidade || !telefone || !email || !setor) {
+    if (!nomeEmpresa || !cnpj || !cidade || !telefone || !email || !setor || !req.body.sexo) {
       return res.status(400).json({ error: 'Nome da empresa, CNPJ, cidade, telefone, email e setor são obrigatórios' });
     }
 
@@ -598,6 +656,8 @@ app.post('/api/companies', async (req, res) => {
     const newCompany = {
       id: generateId(),
       nomeEmpresa,
+      sexo: req.body.sexo,
+      ultimaAtualizacao: new Date().toISOString(),
       cnpj,
       cidade,
       telefone,
@@ -622,6 +682,7 @@ app.post('/api/companies', async (req, res) => {
   }
 });
 
+
 // PUT /api/users/:id - Atualiza um usuário (Candidato ou Empresa)
 app.put('/api/users/:id', authenticateToken, async (req, res) => {
   try {
@@ -640,53 +701,32 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
 
-    // Atualiza os dados principais do usuário
+    // Capturar dados antigos para histórico
     const userToUpdate = allUsers[userIndex];
+    const oldData = { ...userToUpdate };
+
+    // Atualiza os dados principais do usuário
+    const updatedFields = {};
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== userToUpdate[key]) {
+        updatedFields[key] = {
+          old: userToUpdate[key],
+          new: updateData[key]
+        };
+      }
+    });
+
     Object.assign(userToUpdate, {
         nome: updateData.nome || updateData.nomeEmpresa || userToUpdate.nome,
         email: updateData.email || userToUpdate.email,
-        ...updateData
+        ...updateData,
+        ultimaAtualizacao: new Date().toISOString(),
+        isAtirador: userToUpdate.tipoUsuario === 'atirador' ? 
+          checkIfAtirador(updateData.sexo ? updateData : userToUpdate) : 
+          userToUpdate.isAtirador
     });
     
     allUsers[userIndex] = userToUpdate;
     await writeUsers(allUsers);
 
-    // Atualiza a coleção específica (atirador ou empregador)
-    if (userToUpdate.tipoUsuario === 'atirador') {
-        const students = await readStudents();
-        const studentIndex = students.findIndex(s => s.id === id);
-        if (studentIndex !== -1) {
-            Object.assign(students[studentIndex], updateData);
-            await writeStudents(students);
-        }
-    } else if (userToUpdate.tipoUsuario === 'empregador') {
-        const companies = await readCompanies();
-        const companyIndex = companies.findIndex(c => c.id === id);
-        if (companyIndex !== -1) {
-            Object.assign(companies[companyIndex], updateData);
-            await writeCompanies(companies);
-        }
-    }
     
-    const { senha: _, ...userWithoutPassword } = userToUpdate;
-    res.json({ message: 'Perfil atualizado com sucesso!', user: userWithoutPassword });
-
-  } catch (error) {
-    console.error('Erro ao atualizar usuário:', error);
-    res.status(500).json({ error: 'Erro interno do servidor ao atualizar perfil.' });
-  }
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// Exporta o app para a Vercel
-module.exports = app;
